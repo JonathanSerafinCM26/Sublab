@@ -11,14 +11,13 @@ from app.core.config import settings
 class KokoroService(TTSService):
     """Local TTS service using Kokoro-82M ONNX model.
     
-    Downloads model from HuggingFace (hexgrad/Kokoro-82M) if not present locally.
-    Requires: kokoro-v0_19.onnx and voices.bin files.
+    Downloads model from HuggingFace if not present locally.
     """
     
     def __init__(self):
         self._kokoro = None
         self._is_initialized = False
-        self._default_voice = "af_bella"  # Voice from onnx-community repo
+        self._default_voice = "af_bella"
     
     @property
     def provider_name(self) -> str:
@@ -35,50 +34,57 @@ class KokoroService(TTSService):
     async def _download_model_files(self) -> tuple[str, str]:
         """Download ONNX model files from HuggingFace if not present."""
         from huggingface_hub import hf_hub_download
+        import shutil
         
         model_path = os.path.join(settings.weights_path, "model.onnx")
-        voices_path = os.path.join(settings.weights_path, "voices.bin")
+        voices_path = os.path.join(settings.weights_path, "voices.npy")
         
-        # Download model if not exists (from onnx-community repo)
+        # Download model if not exists
         if not os.path.exists(model_path):
             print("📥 Downloading model.onnx from HuggingFace...")
-            downloaded_model = hf_hub_download(
+            hf_hub_download(
                 repo_id="onnx-community/Kokoro-82M-ONNX",
                 filename="onnx/model.onnx",
                 local_dir=settings.weights_path,
                 local_dir_use_symlinks=False
             )
-            # Move from onnx subfolder to weights root
-            import shutil
             onnx_folder = os.path.join(settings.weights_path, "onnx")
             if os.path.exists(os.path.join(onnx_folder, "model.onnx")):
                 shutil.move(os.path.join(onnx_folder, "model.onnx"), model_path)
             print(f"✅ Model downloaded to: {model_path}")
         
-        # Download default voice if not exists
+        # Download and convert voice file if not exists
         if not os.path.exists(voices_path):
             print("📥 Downloading voice file from HuggingFace...")
-            downloaded_voice = hf_hub_download(
+            voices_dir = os.path.join(settings.weights_path, "voices")
+            os.makedirs(voices_dir, exist_ok=True)
+            
+            # Download the voice file
+            hf_hub_download(
                 repo_id="onnx-community/Kokoro-82M-ONNX",
                 filename="voices/af_bella.bin",
                 local_dir=settings.weights_path,
                 local_dir_use_symlinks=False
             )
-            # Move from voices subfolder
-            import shutil
-            voices_folder = os.path.join(settings.weights_path, "voices")
-            bella_path = os.path.join(voices_folder, "af_bella.bin")
-            if os.path.exists(bella_path):
-                shutil.move(bella_path, voices_path)
-            print(f"✅ Voice downloaded to: {voices_path}")
+            
+            # Convert binary to proper numpy dict format
+            bella_bin = os.path.join(voices_dir, "af_bella.bin")
+            if os.path.exists(bella_bin):
+                with open(bella_bin, 'rb') as f:
+                    raw_data = f.read()
+                # Convert to numpy array
+                voice_arr = np.frombuffer(raw_data, dtype=np.float32)
+                # Create voices dict with the embedding
+                voices_dict = {'af_bella': voice_arr, 'default': voice_arr}
+                np.save(voices_path, voices_dict, allow_pickle=True)
+                print(f"✅ Voice converted and saved to: {voices_path}")
         
         return model_path, voices_path
     
     async def initialize(self):
         """Initialize the Kokoro ONNX model."""
         try:
-            from kokoro_onnx import Kokoro
-            import pickle
+            import onnxruntime
             
             # Ensure weights directory exists
             os.makedirs(settings.weights_path, exist_ok=True)
@@ -86,37 +92,22 @@ class KokoroService(TTSService):
             # Download files if needed
             model_path, voices_path = await self._download_model_files()
             
-            # Convert .bin to numpy format if needed
-            voices_npy_path = voices_path.replace('.bin', '.npy')
-            if os.path.exists(voices_path) and not os.path.exists(voices_npy_path):
-                try:
-                    print("🔧 Converting voice file to numpy format...")
-                    with open(voices_path, 'rb') as f:
-                        voice_data = pickle.load(f)
-                    # Save as numpy
-                    np.save(voices_npy_path, voice_data)
-                    voices_path = voices_npy_path
-                    print(f"✅ Voice converted to: {voices_npy_path}")
-                except Exception as e:
-                    print(f"⚠️ Could not convert voice file: {e}")
-                    # Try loading the .bin file with allow_pickle
-                    voices_path = voices_path  # Keep original
-            elif os.path.exists(voices_npy_path):
-                voices_path = voices_npy_path
-            
-            # Load the model
             print(f"🔧 Loading Kokoro from: {model_path}")
             print(f"🔧 Using voices from: {voices_path}")
-            self._kokoro = Kokoro(model_path, voices_path)
+            
+            # Load voices dict manually (since kokoro_onnx doesn't handle our format)
+            voices_dict = np.load(voices_path, allow_pickle=True).item()
+            
+            # Create custom Kokoro wrapper
+            self._session = onnxruntime.InferenceSession(model_path)
+            self._voices = voices_dict
+            self._sample_rate = 24000  # Kokoro default
+            
             self._is_initialized = True
             print("✅ Kokoro TTS initialized successfully")
                 
-        except ImportError as e:
-            print(f"❌ Kokoro import error: {e}")
-            print("   Install with: pip install kokoro-onnx")
-            self._is_initialized = False
         except Exception as e:
-            print(f"⚠️ Kokoro initialization failed (will use Cloud TTS): {e}")
+            print(f"❌ Kokoro initialization error: {e}")
             import traceback
             traceback.print_exc()
             self._is_initialized = False
@@ -133,13 +124,37 @@ class KokoroService(TTSService):
         voice = voice_id or self._default_voice
         
         try:
-            # Generate audio - Kokoro returns (samples, sample_rate)
-            samples, sample_rate = self._kokoro.create(
-                text=text,
-                voice=voice,
-                speed=1.0,
-                lang="es"  # Spanish
-            )
+            # Get voice embedding
+            if voice not in self._voices:
+                voice = 'af_bella'  # Fallback to default
+            voice_embedding = self._voices[voice]
+            
+            # Use kokoro_onnx for generation since it handles the ONNX inference
+            from kokoro_onnx import Kokoro
+            
+            # We need to use the library properly - let's try direct approach
+            # Create a temp voices file with our dict
+            temp_voices = os.path.join(settings.weights_path, "temp_voices.npy")
+            np.save(temp_voices, self._voices, allow_pickle=True)
+            
+            # Monkey-patch numpy.load to allow pickle
+            original_load = np.load
+            def patched_load(file, *args, **kwargs):
+                kwargs['allow_pickle'] = True
+                return original_load(file, *args, **kwargs)
+            np.load = patched_load
+            
+            try:
+                model_path = os.path.join(settings.weights_path, "model.onnx")
+                kokoro = Kokoro(model_path, temp_voices)
+                samples, sample_rate = kokoro.create(
+                    text=text,
+                    voice=voice,
+                    speed=1.0,
+                    lang="es"
+                )
+            finally:
+                np.load = original_load  # Restore original
             
             # Convert to WAV bytes
             buffer = io.BytesIO()
@@ -156,11 +171,7 @@ class KokoroService(TTSService):
         text: str, 
         voice_id: Optional[str] = None
     ) -> AsyncGenerator[bytes, None]:
-        """Generate audio stream using Kokoro TTS.
-        
-        Note: Kokoro doesn't support native streaming, so we generate
-        the full audio and yield it as a single chunk.
-        """
+        """Generate audio stream using Kokoro TTS."""
         audio = await self.generate_audio(text, voice_id)
         yield audio
     
@@ -172,13 +183,10 @@ class KokoroService(TTSService):
         """Clone a voice from audio sample.
         
         Note: Kokoro-82M uses pre-defined style vectors, not true voice cloning.
-        This method saves the audio for reference and returns a default voice.
-        For actual voice cloning, use Fish Audio.
         """
         if not self._is_initialized:
             raise RuntimeError("Kokoro TTS not initialized")
         
-        # Save the reference audio for future use
         os.makedirs(settings.voices_path, exist_ok=True)
         voice_path = os.path.join(settings.voices_path, f"{voice_name}_local.wav")
         with open(voice_path, "wb") as f:
@@ -187,24 +195,12 @@ class KokoroService(TTSService):
         print(f"📝 Saved reference audio to: {voice_path}")
         print(f"⚠️ Note: Kokoro uses pre-defined voices. Using default voice: {self._default_voice}")
         
-        # Return the default voice ID (Kokoro doesn't support true cloning)
         return self._default_voice
     
     async def get_available_voices(self) -> list[dict]:
         """Get available Kokoro voices."""
-        # Kokoro built-in voices (from the voices.bin file)
         return [
-            {"id": "af_heart", "name": "Heart (Female)", "lang": "en", "gender": "female"},
             {"id": "af_bella", "name": "Bella (Female)", "lang": "en", "gender": "female"},
-            {"id": "af_nicole", "name": "Nicole (Female)", "lang": "en", "gender": "female"},
-            {"id": "af_sarah", "name": "Sarah (Female)", "lang": "en", "gender": "female"},
-            {"id": "af_sky", "name": "Sky (Female)", "lang": "en", "gender": "female"},
-            {"id": "am_adam", "name": "Adam (Male)", "lang": "en", "gender": "male"},
-            {"id": "am_michael", "name": "Michael (Male)", "lang": "en", "gender": "male"},
-            {"id": "bf_emma", "name": "Emma (Female British)", "lang": "en-gb", "gender": "female"},
-            {"id": "bf_isabella", "name": "Isabella (Female British)", "lang": "en-gb", "gender": "female"},
-            {"id": "bm_george", "name": "George (Male British)", "lang": "en-gb", "gender": "male"},
-            {"id": "bm_lewis", "name": "Lewis (Male British)", "lang": "en-gb", "gender": "male"},
         ]
 
 

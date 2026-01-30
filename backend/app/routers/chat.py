@@ -62,56 +62,31 @@ async def generate_chat_response(request: ChatMessage):
     
     # Step 2: Generate TTS audio if requested
     audio_data = None
-    actual_provider = request.provider
     
     if request.include_audio:
         tts_start = time.time()
         
         try:
             if request.provider == "local":
-                if kokoro_service.is_initialized:
-                    audio_data = await kokoro_service.generate_audio(
-                        coach_response, 
-                        request.voice_id
-                    )
-                else:
-                    # Fallback to cloud if local not available
-                    print("⚠️ Kokoro not available, falling back to Fish Audio")
-                    if fish_service.is_configured:
-                        audio_data = await fish_service.generate_audio(
-                            coach_response,
-                            request.voice_id
-                        )
-                        actual_provider = "cloud"
-                        metrics["provider"] = "cloud"
-                        metrics["cost"] = "~$0.001"
-                        metrics["privacy"] = "Enviado a API"
-                        metrics["fallback"] = True
+                if not kokoro_service.is_initialized:
+                    raise RuntimeError("Kokoro TTS no está inicializado. Espera a que cargue el modelo.")
+                audio_data = await kokoro_service.generate_audio(
+                    coach_response, 
+                    request.voice_id
+                )
             else:  # cloud
-                if fish_service.is_configured:
-                    audio_data = await fish_service.generate_audio(
-                        coach_response,
-                        request.voice_id
-                    )
-                else:
-                    # Try local as fallback
-                    if kokoro_service.is_initialized:
-                        audio_data = await kokoro_service.generate_audio(
-                            coach_response,
-                            request.voice_id
-                        )
-                        actual_provider = "local"
-                        metrics["provider"] = "local"
-                        metrics["cost"] = "$0.00"
-                        metrics["privacy"] = "En Dispositivo"
-                        metrics["fallback"] = True
+                if not fish_service.is_configured:
+                    raise RuntimeError("Fish Audio no está configurado.")
+                audio_data = await fish_service.generate_audio(
+                    coach_response,
+                    request.voice_id
+                )
             
-            if audio_data:
-                metrics["tts_latency_ms"] = int((time.time() - tts_start) * 1000)
+            metrics["tts_latency_ms"] = int((time.time() - tts_start) * 1000)
             
         except Exception as e:
             print(f"TTS error: {e}")
-            # Continue without audio
+            # Return error in metrics, no audio
             audio_data = None
             metrics["tts_error"] = str(e)
     
