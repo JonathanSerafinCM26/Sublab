@@ -22,7 +22,7 @@ services:
     build: ./backend
     container_name: sublab-backend
     ports:
-      - "8000:8000"
+      - "8180:8000"
     environment:
       - DATABASE_URL=postgresql://sublab:sublab@db:5432/sublab
       - FISH_AUDIO_API_KEY=${FISH_AUDIO_API_KEY}
