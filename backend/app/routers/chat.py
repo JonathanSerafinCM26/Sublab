@@ -62,26 +62,52 @@ async def generate_chat_response(request: ChatMessage):
     
     # Step 2: Generate TTS audio if requested
     audio_data = None
+    actual_provider = request.provider
+    
     if request.include_audio:
         tts_start = time.time()
         
         try:
             if request.provider == "local":
-                if not kokoro_service.is_initialized:
-                    raise HTTPException(status_code=503, detail="Kokoro TTS not initialized")
-                audio_data = await kokoro_service.generate_audio(
-                    coach_response, 
-                    request.voice_id
-                )
+                if kokoro_service.is_initialized:
+                    audio_data = await kokoro_service.generate_audio(
+                        coach_response, 
+                        request.voice_id
+                    )
+                else:
+                    # Fallback to cloud if local not available
+                    print("⚠️ Kokoro not available, falling back to Fish Audio")
+                    if fish_service.is_configured:
+                        audio_data = await fish_service.generate_audio(
+                            coach_response,
+                            request.voice_id
+                        )
+                        actual_provider = "cloud"
+                        metrics["provider"] = "cloud"
+                        metrics["cost"] = "~$0.001"
+                        metrics["privacy"] = "Enviado a API"
+                        metrics["fallback"] = True
             else:  # cloud
-                if not fish_service.is_configured:
-                    raise HTTPException(status_code=503, detail="Fish Audio not configured")
-                audio_data = await fish_service.generate_audio(
-                    coach_response,
-                    request.voice_id
-                )
+                if fish_service.is_configured:
+                    audio_data = await fish_service.generate_audio(
+                        coach_response,
+                        request.voice_id
+                    )
+                else:
+                    # Try local as fallback
+                    if kokoro_service.is_initialized:
+                        audio_data = await kokoro_service.generate_audio(
+                            coach_response,
+                            request.voice_id
+                        )
+                        actual_provider = "local"
+                        metrics["provider"] = "local"
+                        metrics["cost"] = "$0.00"
+                        metrics["privacy"] = "En Dispositivo"
+                        metrics["fallback"] = True
             
-            metrics["tts_latency_ms"] = int((time.time() - tts_start) * 1000)
+            if audio_data:
+                metrics["tts_latency_ms"] = int((time.time() - tts_start) * 1000)
             
         except Exception as e:
             print(f"TTS error: {e}")

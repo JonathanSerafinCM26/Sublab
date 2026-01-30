@@ -27,7 +27,7 @@ Eres el compañero de bienestar del usuario, aquí para ayudarle a encontrar cal
     
     def __init__(self):
         self._client: Optional[AsyncOpenAI] = None
-        self._model = "google/gemini-2.0-flash-exp:free"  # Free tier model
+        self._model = "google/gemma-2-9b-it:free"  # Free tier model that works
     
     @property
     def is_configured(self) -> bool:
