@@ -78,6 +78,7 @@ class KokoroService(TTSService):
         """Initialize the Kokoro ONNX model."""
         try:
             from kokoro_onnx import Kokoro
+            import pickle
             
             # Ensure weights directory exists
             os.makedirs(settings.weights_path, exist_ok=True)
@@ -85,8 +86,27 @@ class KokoroService(TTSService):
             # Download files if needed
             model_path, voices_path = await self._download_model_files()
             
+            # Convert .bin to numpy format if needed
+            voices_npy_path = voices_path.replace('.bin', '.npy')
+            if os.path.exists(voices_path) and not os.path.exists(voices_npy_path):
+                try:
+                    print("🔧 Converting voice file to numpy format...")
+                    with open(voices_path, 'rb') as f:
+                        voice_data = pickle.load(f)
+                    # Save as numpy
+                    np.save(voices_npy_path, voice_data)
+                    voices_path = voices_npy_path
+                    print(f"✅ Voice converted to: {voices_npy_path}")
+                except Exception as e:
+                    print(f"⚠️ Could not convert voice file: {e}")
+                    # Try loading the .bin file with allow_pickle
+                    voices_path = voices_path  # Keep original
+            elif os.path.exists(voices_npy_path):
+                voices_path = voices_npy_path
+            
             # Load the model
             print(f"🔧 Loading Kokoro from: {model_path}")
+            print(f"🔧 Using voices from: {voices_path}")
             self._kokoro = Kokoro(model_path, voices_path)
             self._is_initialized = True
             print("✅ Kokoro TTS initialized successfully")
@@ -96,7 +116,7 @@ class KokoroService(TTSService):
             print("   Install with: pip install kokoro-onnx")
             self._is_initialized = False
         except Exception as e:
-            print(f"❌ Kokoro initialization error: {e}")
+            print(f"⚠️ Kokoro initialization failed (will use Cloud TTS): {e}")
             import traceback
             traceback.print_exc()
             self._is_initialized = False
