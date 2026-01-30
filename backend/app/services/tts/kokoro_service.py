@@ -18,7 +18,7 @@ class KokoroService(TTSService):
     def __init__(self):
         self._kokoro = None
         self._is_initialized = False
-        self._default_voice = "af_heart"  # Default Kokoro voice
+        self._default_voice = "af_bella"  # Voice from onnx-community repo
     
     @property
     def provider_name(self) -> str:
