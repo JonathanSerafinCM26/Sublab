@@ -36,30 +36,41 @@ class KokoroService(TTSService):
         """Download ONNX model files from HuggingFace if not present."""
         from huggingface_hub import hf_hub_download
         
-        model_path = os.path.join(settings.weights_path, "kokoro-v0_19.onnx")
+        model_path = os.path.join(settings.weights_path, "model.onnx")
         voices_path = os.path.join(settings.weights_path, "voices.bin")
         
-        # Download model if not exists
+        # Download model if not exists (from onnx-community repo)
         if not os.path.exists(model_path):
-            print("📥 Downloading kokoro-v0_19.onnx from HuggingFace...")
+            print("📥 Downloading model.onnx from HuggingFace...")
             downloaded_model = hf_hub_download(
-                repo_id="hexgrad/Kokoro-82M",
-                filename="kokoro-v0_19.onnx",
+                repo_id="onnx-community/Kokoro-82M-ONNX",
+                filename="onnx/model.onnx",
                 local_dir=settings.weights_path,
                 local_dir_use_symlinks=False
             )
-            print(f"✅ Model downloaded to: {downloaded_model}")
+            # Move from onnx subfolder to weights root
+            import shutil
+            onnx_folder = os.path.join(settings.weights_path, "onnx")
+            if os.path.exists(os.path.join(onnx_folder, "model.onnx")):
+                shutil.move(os.path.join(onnx_folder, "model.onnx"), model_path)
+            print(f"✅ Model downloaded to: {model_path}")
         
-        # Download voices if not exists
+        # Download default voice if not exists
         if not os.path.exists(voices_path):
-            print("📥 Downloading voices.bin from HuggingFace...")
-            downloaded_voices = hf_hub_download(
-                repo_id="hexgrad/Kokoro-82M",
-                filename="voices.bin",
+            print("📥 Downloading voice file from HuggingFace...")
+            downloaded_voice = hf_hub_download(
+                repo_id="onnx-community/Kokoro-82M-ONNX",
+                filename="voices/af_bella.bin",
                 local_dir=settings.weights_path,
                 local_dir_use_symlinks=False
             )
-            print(f"✅ Voices downloaded to: {downloaded_voices}")
+            # Move from voices subfolder
+            import shutil
+            voices_folder = os.path.join(settings.weights_path, "voices")
+            bella_path = os.path.join(voices_folder, "af_bella.bin")
+            if os.path.exists(bella_path):
+                shutil.move(bella_path, voices_path)
+            print(f"✅ Voice downloaded to: {voices_path}")
         
         return model_path, voices_path
     
