@@ -101,14 +101,19 @@ async def list_voices():
 
 @router.get("/status")
 async def get_status():
-    """Get status of TTS providers."""
+    """Get status of TTS providers including available voices."""
+    local_voices = []
+    if kokoro_service.is_initialized:
+        local_voices = await kokoro_service.get_available_voices()
+    
     return {
         "local": {
             "provider": "kokoro",
             "initialized": kokoro_service.is_initialized,
             "is_local": True,
             "cost": "$0.00",
-            "privacy": "En Dispositivo"
+            "privacy": "En Dispositivo",
+            "voices": local_voices
         },
         "cloud": {
             "provider": "fish_audio",
@@ -118,3 +123,4 @@ async def get_status():
             "privacy": "Enviado a API"
         }
     }
+

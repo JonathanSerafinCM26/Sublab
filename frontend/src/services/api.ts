@@ -47,6 +47,13 @@ export interface VoiceStatus {
         is_local: boolean
         cost: string
         privacy: string
+        voices?: Array<{
+            id: string
+            name: string
+            lang: string
+            gender: string
+            custom: boolean
+        }>
     }
     cloud: {
         provider: string
@@ -89,14 +96,14 @@ export async function testTTS(
 }
 
 /**
- * Clone a voice with both providers
+ * Clone a voice from audio recording
  */
 export async function cloneVoice(
-    audioFile: File,
-    voiceName: string = 'coach_voice'
-): Promise<VoiceCloneResponse> {
+    audioBlob: Blob,
+    voiceName: string = 'coach'
+): Promise<{ voice_id: string; message: string }> {
     const formData = new FormData()
-    formData.append('audio', audioFile)
+    formData.append('audio', audioBlob, `${voiceName}.webm`)
     formData.append('voice_name', voiceName)
 
     const response = await api.post('/api/voice/clone', formData, {

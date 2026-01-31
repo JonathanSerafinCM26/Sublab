@@ -1,0 +1,7 @@
+# Requirements for offline voice extraction
+# Run: pip install -r requirements.txt
+
+torch>=2.0.0
+torchaudio>=2.0.0
+numpy
+scipy

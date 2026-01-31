@@ -90,6 +90,38 @@ class KokoroService(TTSService):
         
         return model_path, voices_path
     
+    def _load_custom_voices(self):
+        """Load custom voice files from the voices/ folder."""
+        if not os.path.exists(settings.voices_path):
+            return
+        
+        # Look for .npy files in voices folder
+        for filename in os.listdir(settings.voices_path):
+            if filename.endswith('.npy'):
+                voice_name = filename.replace('.npy', '')
+                voice_path = os.path.join(settings.voices_path, filename)
+                
+                try:
+                    voice_data = np.load(voice_path, allow_pickle=True)
+                    
+                    # Handle different formats
+                    if isinstance(voice_data, np.ndarray) and voice_data.shape == ():
+                        voice_data = voice_data.item()
+                    
+                    if isinstance(voice_data, dict):
+                        # If it's a dict, add all voices from it
+                        for key, value in voice_data.items():
+                            if isinstance(value, np.ndarray) and value.shape == (512, 256):
+                                self._voices[key] = value
+                                print(f"🎤 Loaded custom voice: {key} from {filename}")
+                    elif isinstance(voice_data, np.ndarray) and voice_data.shape == (512, 256):
+                        # Direct array format
+                        self._voices[voice_name] = voice_data
+                        print(f"🎤 Loaded custom voice: {voice_name}")
+                        
+                except Exception as e:
+                    print(f"⚠️ Could not load voice {filename}: {e}")
+    
     async def initialize(self):
         """Initialize the Kokoro ONNX model."""
         try:
@@ -97,15 +129,20 @@ class KokoroService(TTSService):
             from kokoro_onnx.tokenizer import Tokenizer
             
             os.makedirs(settings.weights_path, exist_ok=True)
+            os.makedirs(settings.voices_path, exist_ok=True)
+            
             model_path, voices_path = await self._download_model_files()
             
             print(f"🔧 Loading ONNX model from: {model_path}")
             self._session = ort.InferenceSession(model_path)
             
-            print(f"🔧 Loading voices from: {voices_path}")
+            print(f"🔧 Loading default voices from: {voices_path}")
             self._voices = np.load(voices_path, allow_pickle=True)
             if isinstance(self._voices, np.ndarray) and self._voices.shape == ():
                 self._voices = self._voices.item()
+            
+            # Load custom voices from voices/ folder
+            self._load_custom_voices()
             
             print(f"🔧 Available voices: {list(self._voices.keys())}")
             
@@ -198,10 +235,44 @@ class KokoroService(TTSService):
         return self._default_voice
     
     async def get_available_voices(self) -> list[dict]:
-        """Get available Kokoro voices."""
-        return [
-            {"id": "af_bella", "name": "Bella (Female)", "lang": "en", "gender": "female"},
-        ]
+        """Get available Kokoro voices including custom ones."""
+        voices = []
+        
+        # Add default voice info
+        default_voices = {
+            "af_bella": {"name": "Bella (Female)", "lang": "en", "gender": "female"},
+        }
+        
+        if self._voices:
+            for voice_id in self._voices.keys():
+                if voice_id in default_voices:
+                    info = default_voices[voice_id]
+                    voices.append({
+                        "id": voice_id,
+                        "name": info["name"],
+                        "lang": info["lang"],
+                        "gender": info["gender"],
+                        "custom": False
+                    })
+                else:
+                    # Custom voice
+                    voices.append({
+                        "id": voice_id,
+                        "name": f"{voice_id.replace('_', ' ').title()} (Custom)",
+                        "lang": "es",
+                        "gender": "unknown",
+                        "custom": True
+                    })
+        else:
+            voices.append({
+                "id": "af_bella",
+                "name": "Bella (Female)",
+                "lang": "en", 
+                "gender": "female",
+                "custom": False
+            })
+        
+        return voices
 
 
 # Global singleton instance
