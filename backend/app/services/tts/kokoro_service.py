@@ -8,11 +8,22 @@ from app.services.tts.base import TTSService
 from app.core.config import settings
 
 
+# Patch numpy.load to handle pickled dict files
+_original_np_load = np.load
+def _patched_np_load(file, *args, **kwargs):
+    kwargs['allow_pickle'] = True
+    result = _original_np_load(file, *args, **kwargs)
+    # If it's a 0-d array containing a dict, extract it
+    if isinstance(result, np.ndarray) and result.shape == () and hasattr(result, 'item'):
+        item = result.item()
+        if isinstance(item, dict):
+            return item
+    return result
+np.load = _patched_np_load
+
+
 class KokoroService(TTSService):
-    """Local TTS service using Kokoro-82M ONNX model.
-    
-    Downloads model from HuggingFace if not present locally.
-    """
+    """Local TTS service using Kokoro-82M ONNX model."""
     
     def __init__(self):
         self._kokoro = None
@@ -59,7 +70,6 @@ class KokoroService(TTSService):
             voices_dir = os.path.join(settings.weights_path, "voices")
             os.makedirs(voices_dir, exist_ok=True)
             
-            # Download the voice file
             hf_hub_download(
                 repo_id="onnx-community/Kokoro-82M-ONNX",
                 filename="voices/af_bella.bin",
@@ -72,19 +82,20 @@ class KokoroService(TTSService):
             if os.path.exists(bella_bin):
                 with open(bella_bin, 'rb') as f:
                     raw_data = f.read()
-                # Convert to numpy array
+                # Convert to numpy array and RESHAPE to (512, 256)
                 voice_arr = np.frombuffer(raw_data, dtype=np.float32)
-                # Create voices dict with the embedding
-                voices_dict = {'af_bella': voice_arr, 'default': voice_arr}
+                voice_reshaped = voice_arr.reshape(512, 256)
+                # Create voices dict with reshaped embedding
+                voices_dict = {'af_bella': voice_reshaped}
                 np.save(voices_path, voices_dict, allow_pickle=True)
-                print(f"✅ Voice converted and saved to: {voices_path}")
+                print(f"✅ Voice converted (shape: {voice_reshaped.shape}) to: {voices_path}")
         
         return model_path, voices_path
     
     async def initialize(self):
         """Initialize the Kokoro ONNX model."""
         try:
-            import onnxruntime
+            from kokoro_onnx import Kokoro
             
             # Ensure weights directory exists
             os.makedirs(settings.weights_path, exist_ok=True)
@@ -95,14 +106,8 @@ class KokoroService(TTSService):
             print(f"🔧 Loading Kokoro from: {model_path}")
             print(f"🔧 Using voices from: {voices_path}")
             
-            # Load voices dict manually (since kokoro_onnx doesn't handle our format)
-            voices_dict = np.load(voices_path, allow_pickle=True).item()
-            
-            # Create custom Kokoro wrapper
-            self._session = onnxruntime.InferenceSession(model_path)
-            self._voices = voices_dict
-            self._sample_rate = 24000  # Kokoro default
-            
+            # Load Kokoro with patched numpy.load
+            self._kokoro = Kokoro(model_path, voices_path)
             self._is_initialized = True
             print("✅ Kokoro TTS initialized successfully")
                 
@@ -124,37 +129,12 @@ class KokoroService(TTSService):
         voice = voice_id or self._default_voice
         
         try:
-            # Get voice embedding
-            if voice not in self._voices:
-                voice = 'af_bella'  # Fallback to default
-            voice_embedding = self._voices[voice]
-            
-            # Use kokoro_onnx for generation since it handles the ONNX inference
-            from kokoro_onnx import Kokoro
-            
-            # We need to use the library properly - let's try direct approach
-            # Create a temp voices file with our dict
-            temp_voices = os.path.join(settings.weights_path, "temp_voices.npy")
-            np.save(temp_voices, self._voices, allow_pickle=True)
-            
-            # Monkey-patch numpy.load to allow pickle
-            original_load = np.load
-            def patched_load(file, *args, **kwargs):
-                kwargs['allow_pickle'] = True
-                return original_load(file, *args, **kwargs)
-            np.load = patched_load
-            
-            try:
-                model_path = os.path.join(settings.weights_path, "model.onnx")
-                kokoro = Kokoro(model_path, temp_voices)
-                samples, sample_rate = kokoro.create(
-                    text=text,
-                    voice=voice,
-                    speed=1.0,
-                    lang="es"
-                )
-            finally:
-                np.load = original_load  # Restore original
+            samples, sample_rate = self._kokoro.create(
+                text=text,
+                voice=voice,
+                speed=1.0,
+                lang="es"
+            )
             
             # Convert to WAV bytes
             buffer = io.BytesIO()
@@ -180,10 +160,7 @@ class KokoroService(TTSService):
         audio_data: bytes, 
         voice_name: str
     ) -> str:
-        """Clone a voice from audio sample.
-        
-        Note: Kokoro-82M uses pre-defined style vectors, not true voice cloning.
-        """
+        """Clone a voice from audio sample."""
         if not self._is_initialized:
             raise RuntimeError("Kokoro TTS not initialized")
         
@@ -193,8 +170,6 @@ class KokoroService(TTSService):
             f.write(audio_data)
         
         print(f"📝 Saved reference audio to: {voice_path}")
-        print(f"⚠️ Note: Kokoro uses pre-defined voices. Using default voice: {self._default_voice}")
-        
         return self._default_voice
     
     async def get_available_voices(self) -> list[dict]:
