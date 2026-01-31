@@ -8,6 +8,19 @@ from app.services.tts.base import TTSService
 from app.core.config import settings
 
 
+# Patch numpy.load at module level to handle pickled dicts
+_original_np_load = np.load
+def _patched_np_load(file, *args, **kwargs):
+    kwargs['allow_pickle'] = True
+    result = _original_np_load(file, *args, **kwargs)
+    if isinstance(result, np.ndarray) and result.shape == () and hasattr(result, 'item'):
+        item = result.item()
+        if isinstance(item, dict):
+            return item
+    return result
+np.load = _patched_np_load
+
+
 class KokoroService(TTSService):
     """Local TTS service using Kokoro-82M ONNX model with direct ONNX inference."""
     
@@ -40,7 +53,6 @@ class KokoroService(TTSService):
         model_path = os.path.join(settings.weights_path, "model.onnx")
         voices_path = os.path.join(settings.weights_path, "voices.npy")
         
-        # Download model if not exists
         if not os.path.exists(model_path):
             print("📥 Downloading model.onnx from HuggingFace...")
             hf_hub_download(
@@ -54,7 +66,6 @@ class KokoroService(TTSService):
                 shutil.move(os.path.join(onnx_folder, "model.onnx"), model_path)
             print(f"✅ Model downloaded to: {model_path}")
         
-        # Download and convert voice file if not exists
         if not os.path.exists(voices_path):
             print("📥 Downloading voice file from HuggingFace...")
             voices_dir = os.path.join(settings.weights_path, "voices")
@@ -72,7 +83,6 @@ class KokoroService(TTSService):
                 with open(bella_bin, 'rb') as f:
                     raw_data = f.read()
                 voice_arr = np.frombuffer(raw_data, dtype=np.float32)
-                # Reshape to (512, 256) - 512 style embeddings of 256 dims each
                 voice_reshaped = voice_arr.reshape(512, 256)
                 voices_dict = {'af_bella': voice_reshaped}
                 np.save(voices_path, voices_dict, allow_pickle=True)
@@ -80,37 +90,11 @@ class KokoroService(TTSService):
         
         return model_path, voices_path
     
-    def _phonemize(self, text: str, lang: str = "es") -> str:
-        """Convert text to phonemes using espeak."""
-        try:
-            from phonemizer import phonemize
-            from phonemizer.backend import EspeakBackend
-            
-            phonemes = phonemize(
-                text,
-                language=lang if lang != "es" else "es",
-                backend='espeak',
-                strip=True,
-                preserve_punctuation=True,
-                with_stress=True
-            )
-            return phonemes
-        except Exception as e:
-            print(f"Phonemizer error: {e}, using simple fallback")
-            # Simple fallback - just return text as-is
-            return text
-    
-    def _text_to_tokens(self, phonemes: str) -> np.ndarray:
-        """Convert phonemes to token IDs."""
-        # Simple character-to-token mapping
-        # Kokoro uses a specific vocabulary, we'll use ASCII codes as approximation
-        tokens = [ord(c) % 256 for c in phonemes]
-        return np.array([tokens], dtype=np.int64)
-    
     async def initialize(self):
         """Initialize the Kokoro ONNX model."""
         try:
             import onnxruntime as ort
+            from kokoro_onnx.tokenizer import Tokenizer
             
             os.makedirs(settings.weights_path, exist_ok=True)
             model_path, voices_path = await self._download_model_files()
@@ -119,21 +103,15 @@ class KokoroService(TTSService):
             self._session = ort.InferenceSession(model_path)
             
             print(f"🔧 Loading voices from: {voices_path}")
-            voices_data = np.load(voices_path, allow_pickle=True)
-            if isinstance(voices_data, np.ndarray) and voices_data.shape == ():
-                self._voices = voices_data.item()
-            else:
-                self._voices = voices_data
+            self._voices = np.load(voices_path, allow_pickle=True)
+            if isinstance(self._voices, np.ndarray) and self._voices.shape == ():
+                self._voices = self._voices.item()
             
             print(f"🔧 Available voices: {list(self._voices.keys())}")
             
-            # Initialize phonemizer
-            try:
-                from phonemizer.backend import EspeakBackend
-                EspeakBackend.version()
-                print("✅ Phonemizer ready")
-            except Exception as e:
-                print(f"⚠️ Phonemizer not available: {e}")
+            # Use kokoro_onnx's tokenizer
+            self._tokenizer = Tokenizer()
+            print("✅ Tokenizer ready")
             
             self._is_initialized = True
             print("✅ Kokoro TTS initialized successfully")
@@ -149,29 +127,29 @@ class KokoroService(TTSService):
         text: str, 
         voice_id: Optional[str] = None
     ) -> bytes:
-        """Generate audio using direct ONNX inference."""
+        """Generate audio using direct ONNX inference with kokoro tokenizer."""
         if not self._is_initialized:
             raise RuntimeError("Kokoro TTS not initialized")
         
         voice_name = voice_id or self._default_voice
         
         try:
-            # Get voice embedding
+            # Get voice embedding (512, 256)
             voice_data = self._voices.get(voice_name, self._voices.get('af_bella'))
             
-            # Phonemize text
-            phonemes = self._phonemize(text, "es")
+            # Phonemize and tokenize using kokoro's tokenizer
+            phonemes = self._tokenizer.phonemize(text, "es")
+            tokens = self._tokenizer.tokenize(phonemes)
             
-            # Convert to tokens
-            tokens = self._text_to_tokens(phonemes)
-            num_tokens = min(tokens.shape[1], 511)  # Max 511 to stay within 512 styles
-            
-            # Select style based on token length (as kokoro does)
+            # Select style based on token length
+            num_tokens = min(len(tokens), 511)
             style = voice_data[num_tokens:num_tokens+1, :].astype(np.float32)
             
-            # Prepare inputs
+            # Prepare inputs with correct types
+            input_ids = np.array([tokens], dtype=np.int64)
+            
             inputs = {
-                'input_ids': tokens,
+                'input_ids': input_ids,
                 'style': style,
                 'speed': np.array([1.0], dtype=np.float32)
             }
