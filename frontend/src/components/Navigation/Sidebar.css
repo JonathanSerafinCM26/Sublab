@@ -8,14 +8,16 @@
     .desktop-sidebar {
         display: flex;
         flex-direction: column;
-        width: 250px;
-        min-width: 250px;
+        width: 280px;
+        min-width: 280px;
         height: 100vh;
         background: var(--surface);
         border-right: 1px solid var(--border);
-        padding: var(--space-lg);
+        padding: var(--space-xl);
         position: sticky;
         top: 0;
+        z-index: 100;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
     }
 
     .sidebar-header {

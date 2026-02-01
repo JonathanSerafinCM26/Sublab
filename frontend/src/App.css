@@ -3,6 +3,21 @@
     display: flex;
     flex-direction: column;
     background: var(--background-gradient);
+    background-attachment: fixed;
+    position: relative;
+}
+
+.app::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(var(--primary-light) 0.5px, transparent 0.5px);
+    background-size: 32px 32px;
+    opacity: 0.15;
+    pointer-events: none;
 }
 
 .app-main {
@@ -10,6 +25,8 @@
     padding-bottom: 80px;
     /* Space for bottom nav on mobile */
     overflow-y: auto;
+    position: relative;
+    z-index: 1;
 }
 
 /* Settings Page Wrapper */
