@@ -34,21 +34,27 @@ export const VoiceSettingsPanel: FC<VoiceSettingsPanelProps> = ({
         }
     }
 
-    const handleRecordingComplete = async (audioBlob: Blob) => {
+    const handleRecordingComplete = async (audioBlob: Blob): Promise<void> => {
         setCloneError(null)
         setCloneSuccess(null)
 
         try {
             const result = await cloneVoice(audioBlob, 'coach')
             setCloneSuccess(`¡Voz clonada exitosamente! ID: ${result.voice_id}`)
-            setShowRecorder(false)
             // Reload status to show new voice
             await loadVoiceStatus()
+            // Note: Don't close here - let VoiceRecorder show success screen
+            // The recorder will call onClose when user clicks "Continuar"
         } catch (err) {
-            setCloneError('Error al clonar la voz. Intenta de nuevo.')
-            setShowRecorder(false)
+            setCloneError('Error al clonar la voz.')
+            throw err // Re-throw so VoiceRecorder can show error screen
         }
     }
+
+    const handleRecorderClose = () => {
+        setShowRecorder(false)
+    }
+
 
     return (
         <>

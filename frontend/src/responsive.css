@@ -1,0 +1,253 @@
+/* Responsive Desktop Layout */
+/* This file adds responsive design for desktop/tablet viewing */
+
+/* Base responsive container - fill full width */
+@media (min-width: 768px) {
+    #root {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .app {
+        width: 100%;
+        max-width: none;
+    }
+
+    .app-main {
+        display: block;
+        padding: var(--space-lg);
+        padding-left: 300px;
+        /* Space for sidebar */
+        padding-bottom: 40px;
+        min-height: 100vh;
+    }
+}
+
+/* Desktop Navigation - Sidebar */
+@media (min-width: 768px) {
+    .bottom-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding-top: var(--space-2xl);
+        padding-bottom: var(--space-lg);
+        border-top: none;
+        border-right: 1px solid var(--border);
+        border-radius: 0;
+        box-shadow: 4px 0 20px var(--shadow-color);
+        z-index: 100;
+    }
+
+    .nav-item {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: var(--space-md);
+        padding: var(--space-md) var(--space-lg);
+        width: 100%;
+        border-radius: var(--radius-lg);
+        margin: var(--space-xs) var(--space-md);
+    }
+
+    .nav-item.active {
+        background: rgba(107, 91, 149, 0.15);
+    }
+
+    .nav-label {
+        font-size: 1rem;
+    }
+
+    .nav-item.main {
+        background: var(--ai-gradient);
+        margin: var(--space-xs) var(--space-md);
+    }
+
+    .nav-item.main .nav-icon {
+        width: auto;
+        height: auto;
+        background: none;
+        box-shadow: none;
+    }
+}
+
+/* Desktop Home Page - Full width grid */
+@media (min-width: 768px) {
+    .home-page {
+        width: 100%;
+        max-width: 100%;
+        padding: var(--space-2xl);
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-xl);
+    }
+
+    .hero-section {
+        grid-column: 1 / -1;
+        padding: var(--space-2xl);
+        text-align: center;
+    }
+
+    .quick-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: var(--space-lg);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .action-card {
+        flex: 1;
+        min-width: 200px;
+        max-width: 300px;
+    }
+
+    .progress-summary,
+    .coach-teaser {
+        max-width: 100%;
+    }
+}
+
+/* Desktop Coach Chat - Full width */
+@media (min-width: 768px) {
+    .coach-chat-page {
+        width: 100%;
+        max-width: 100%;
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        grid-template-rows: auto 1fr auto;
+        height: calc(100vh - 40px);
+        gap: var(--space-lg);
+    }
+
+    .chat-header {
+        grid-column: 1 / -1;
+    }
+
+    .analysis-card {
+        grid-column: 1;
+        grid-row: 2;
+        margin: 0;
+        padding: var(--space-lg);
+        height: fit-content;
+    }
+
+    .recommendations {
+        grid-column: 1;
+        grid-row: 2;
+        padding: var(--space-lg);
+        overflow-y: auto;
+    }
+
+    .messages-container {
+        grid-column: 2;
+        grid-row: 2;
+        padding: var(--space-xl);
+        overflow-y: auto;
+    }
+
+    .chat-input-container {
+        grid-column: 2;
+        grid-row: 3;
+        border-radius: var(--radius-lg);
+        margin: var(--space-md);
+    }
+}
+
+/* Desktop Evolution Page */
+@media (min-width: 768px) {
+    .evolution-page {
+        width: 100%;
+        max-width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-lg);
+        padding: var(--space-2xl);
+    }
+
+    .evolution-header {
+        grid-column: 1 / -1;
+    }
+
+    .summary-card {
+        grid-column: 1 / -1;
+    }
+
+    .metric-card {
+        grid-column: auto;
+    }
+
+    .encouragement-card {
+        grid-column: 1 / -1;
+    }
+
+    .pagination-dots {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Desktop Practices Page */
+@media (min-width: 768px) {
+    .practices-page {
+        width: 100%;
+        max-width: 100%;
+        padding: var(--space-2xl);
+    }
+
+    .practices-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: var(--space-lg);
+    }
+
+    .daily-progress {
+        max-width: 600px;
+        margin: 0 auto var(--space-xl);
+    }
+}
+
+/* Large desktop screens - 3 column layout */
+@media (min-width: 1200px) {
+    .home-page {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .hero-section {
+        grid-column: 1 / -1;
+    }
+
+    .quick-actions {
+        grid-column: 1 / -1;
+    }
+
+    .practices-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Settings Page Desktop */
+@media (min-width: 768px) {
+    .settings-page {
+        padding: var(--space-2xl);
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .settings-panel {
+        max-width: 100%;
+    }
+}
+
+/* Cards should stretch properly on desktop */
+@media (min-width: 768px) {
+    .card {
+        width: 100%;
+    }
+
+    .session-card {
+        width: 100%;
+    }
+}

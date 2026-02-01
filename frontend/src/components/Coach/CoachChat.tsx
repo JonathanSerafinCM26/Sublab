@@ -78,13 +78,43 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local' }) =>
 
         try {
             const response = await sendMessage(input, provider)
+            console.log('📥 Response received:', {
+                text: response.text?.substring(0, 50) + '...',
+                hasAudio: !!response.audio,
+                audioLength: response.audio?.length || 0
+            })
+
+            // Convert base64 audio to blob URL if present
+            let audioUrl: string | undefined
+            if (response.audio) {
+                console.log('🔊 Decoding base64 audio...')
+                const binaryString = atob(response.audio)
+                const bytes = new Uint8Array(binaryString.length)
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i)
+                }
+                const blob = new Blob([bytes], { type: 'audio/wav' })
+                audioUrl = URL.createObjectURL(blob)
+                console.log('✅ Audio blob created:', { blobSize: blob.size, url: audioUrl })
+            } else {
+                console.log('⚠️ No audio in response')
+            }
 
             // Update with real response
             setMessages(prev => prev.map(msg =>
                 msg.id === loadingId
-                    ? { ...msg, content: response.text, audioUrl: response.audio_url, isLoading: false }
+                    ? { ...msg, content: response.text, audioUrl, isLoading: false }
                     : msg
             ))
+
+            // Auto-play audio when response arrives
+            if (audioUrl && audioRef.current) {
+                console.log('▶️ Attempting to play audio...')
+                audioRef.current.src = audioUrl
+                audioRef.current.play()
+                    .then(() => console.log('✅ Audio playing!'))
+                    .catch(e => console.log('❌ Autoplay blocked:', e))
+            }
         } catch (error) {
             setMessages(prev => prev.map(msg =>
                 msg.id === loadingId
@@ -98,7 +128,7 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local' }) =>
 
     const playAudio = (audioUrl: string) => {
         if (audioRef.current) {
-            audioRef.current.src = `http://localhost:8000${audioUrl}`
+            audioRef.current.src = audioUrl
             audioRef.current.play()
         }
     }
@@ -115,10 +145,9 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local' }) =>
 
         // Generate TTS for the session intro
         try {
-            const audio = await testTTS(systemMessage.content, provider)
-            if (audio.audio_url) {
-                playAudio(audio.audio_url)
-            }
+            const audioBlob = await testTTS(systemMessage.content, provider)
+            const audioUrl = URL.createObjectURL(audioBlob)
+            playAudio(audioUrl)
         } catch (e) {
             console.error('Error playing TTS:', e)
         }

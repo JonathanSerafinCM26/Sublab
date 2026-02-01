@@ -31,7 +31,7 @@ class KokoroService(TTSService):
         self._voices = None
         self._tokenizer = None
         self._is_initialized = False
-        self._default_voice = "af_bella"
+        self._default_voice = "af_bella"  # English female voice (Spanish voices not available in ONNX)
     
     @property
     def provider_name(self) -> str:
@@ -66,29 +66,52 @@ class KokoroService(TTSService):
                 shutil.move(os.path.join(onnx_folder, "model.onnx"), model_path)
             print(f"✅ Model downloaded to: {model_path}")
         
-        if not os.path.exists(voices_path):
-            print("📥 Downloading voice file from HuggingFace...")
-            voices_dir = os.path.join(settings.weights_path, "voices")
-            os.makedirs(voices_dir, exist_ok=True)
+        # Voice files to download from Kokoro 82M ONNX
+        # Note: ONNX version only has these two voices
+        voice_files = [
+            "af_bella",    # American English female (default)
+            "am_adam",     # American English male
+        ]
+        
+        voices_dir = os.path.join(settings.weights_path, "voices")
+        os.makedirs(voices_dir, exist_ok=True)
+        
+        voices_dict = {}
+        
+        for voice_name in voice_files:
+            voice_bin = os.path.join(voices_dir, f"{voice_name}.bin")
             
-            hf_hub_download(
-                repo_id="onnx-community/Kokoro-82M-ONNX",
-                filename="voices/af_bella.bin",
-                local_dir=settings.weights_path,
-                local_dir_use_symlinks=False
-            )
+            if not os.path.exists(voice_bin):
+                print(f"📥 Downloading {voice_name}.bin from HuggingFace...")
+                try:
+                    hf_hub_download(
+                        repo_id="onnx-community/Kokoro-82M-ONNX",
+                        filename=f"voices/{voice_name}.bin",
+                        local_dir=settings.weights_path,
+                        local_dir_use_symlinks=False
+                    )
+                except Exception as e:
+                    print(f"⚠️ Could not download {voice_name}: {e}")
+                    continue
             
-            bella_bin = os.path.join(voices_dir, "af_bella.bin")
-            if os.path.exists(bella_bin):
-                with open(bella_bin, 'rb') as f:
-                    raw_data = f.read()
-                voice_arr = np.frombuffer(raw_data, dtype=np.float32)
-                voice_reshaped = voice_arr.reshape(512, 256)
-                voices_dict = {'af_bella': voice_reshaped}
-                np.save(voices_path, voices_dict, allow_pickle=True)
-                print(f"✅ Voice converted (shape: {voice_reshaped.shape}) to: {voices_path}")
+            if os.path.exists(voice_bin):
+                try:
+                    with open(voice_bin, 'rb') as f:
+                        raw_data = f.read()
+                    voice_arr = np.frombuffer(raw_data, dtype=np.float32)
+                    voice_reshaped = voice_arr.reshape(512, 256)
+                    voices_dict[voice_name] = voice_reshaped
+                    print(f"✅ Loaded voice: {voice_name}")
+                except Exception as e:
+                    print(f"⚠️ Error loading {voice_name}: {e}")
+        
+        # Save all voices to single npy file
+        if voices_dict:
+            np.save(voices_path, voices_dict, allow_pickle=True)
+            print(f"✅ Voices saved to: {voices_path}")
         
         return model_path, voices_path
+
     
     def _load_custom_voices(self):
         """Load custom voice files from the voices/ folder."""
@@ -159,6 +182,53 @@ class KokoroService(TTSService):
             traceback.print_exc()
             self._is_initialized = False
     
+    def _split_text_into_chunks(self, text: str, max_chars: int = 350) -> list[str]:
+        """Split text into chunks that fit within phoneme limits.
+        
+        Splits on sentence boundaries (. ! ?) when possible,
+        otherwise splits on word boundaries.
+        """
+        import re
+        
+        # If text is short enough, return as-is
+        if len(text) <= max_chars:
+            return [text]
+        
+        chunks = []
+        
+        # Split by sentences first
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        
+        current_chunk = ""
+        for sentence in sentences:
+            # If adding this sentence would exceed limit
+            if len(current_chunk) + len(sentence) + 1 > max_chars:
+                # Save current chunk if not empty
+                if current_chunk.strip():
+                    chunks.append(current_chunk.strip())
+                
+                # If sentence itself is too long, split by words
+                if len(sentence) > max_chars:
+                    words = sentence.split()
+                    current_chunk = ""
+                    for word in words:
+                        if len(current_chunk) + len(word) + 1 > max_chars:
+                            if current_chunk.strip():
+                                chunks.append(current_chunk.strip())
+                            current_chunk = word
+                        else:
+                            current_chunk += " " + word if current_chunk else word
+                else:
+                    current_chunk = sentence
+            else:
+                current_chunk += " " + sentence if current_chunk else sentence
+        
+        # Don't forget the last chunk
+        if current_chunk.strip():
+            chunks.append(current_chunk.strip())
+        
+        return chunks
+    
     async def generate_audio(
         self, 
         text: str, 
@@ -174,30 +244,44 @@ class KokoroService(TTSService):
             # Get voice embedding (512, 256)
             voice_data = self._voices.get(voice_name, self._voices.get('af_bella'))
             
-            # Phonemize and tokenize using kokoro's tokenizer
-            phonemes = self._tokenizer.phonemize(text, "es")
-            tokens = self._tokenizer.tokenize(phonemes)
+            # Split text into chunks to avoid phoneme limit
+            chunks = self._split_text_into_chunks(text)
             
-            # Select style based on token length
-            num_tokens = min(len(tokens), 511)
-            style = voice_data[num_tokens:num_tokens+1, :].astype(np.float32)
+            all_samples = []
             
-            # Prepare inputs with correct types
-            input_ids = np.array([tokens], dtype=np.int64)
+            for chunk in chunks:
+                # Phonemize and tokenize using kokoro's tokenizer
+                # Use 'es' for Spanish (espeak language code)
+                phonemes = self._tokenizer.phonemize(chunk, "es")
+                tokens = self._tokenizer.tokenize(phonemes)
+                
+                # Select style based on token length
+                num_tokens = min(len(tokens), 511)
+                style = voice_data[num_tokens:num_tokens+1, :].astype(np.float32)
+                
+                # Prepare inputs with correct types
+                input_ids = np.array([tokens], dtype=np.int64)
+                
+                inputs = {
+                    'input_ids': input_ids,
+                    'style': style,
+                    'speed': np.array([1.0], dtype=np.float32)
+                }
+                
+                # Run inference
+                output = self._session.run(None, inputs)
+                samples = output[0].squeeze()
+                all_samples.append(samples)
             
-            inputs = {
-                'input_ids': input_ids,
-                'style': style,
-                'speed': np.array([1.0], dtype=np.float32)
-            }
-            
-            # Run inference
-            output = self._session.run(None, inputs)
-            samples = output[0].squeeze()
+            # Concatenate all audio chunks
+            if len(all_samples) > 1:
+                combined_samples = np.concatenate(all_samples)
+            else:
+                combined_samples = all_samples[0]
             
             # Convert to WAV bytes
             buffer = io.BytesIO()
-            sf.write(buffer, samples, self.SAMPLE_RATE, format='WAV')
+            sf.write(buffer, combined_samples, self.SAMPLE_RATE, format='WAV')
             buffer.seek(0)
             
             return buffer.read()

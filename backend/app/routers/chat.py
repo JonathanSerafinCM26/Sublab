@@ -65,6 +65,7 @@ async def generate_chat_response(request: ChatMessage):
     
     if request.include_audio:
         tts_start = time.time()
+        print(f"🔊 TTS: Generating audio for text ({len(coach_response)} chars)...")
         
         try:
             if request.provider == "local":
@@ -83,9 +84,12 @@ async def generate_chat_response(request: ChatMessage):
                 )
             
             metrics["tts_latency_ms"] = int((time.time() - tts_start) * 1000)
+            print(f"✅ TTS: Audio generated! Size: {len(audio_data)} bytes, Latency: {metrics['tts_latency_ms']}ms")
             
         except Exception as e:
-            print(f"TTS error: {e}")
+            print(f"❌ TTS error: {e}")
+            import traceback
+            traceback.print_exc()
             # Return error in metrics, no audio
             audio_data = None
             metrics["tts_error"] = str(e)
@@ -95,14 +99,17 @@ async def generate_chat_response(request: ChatMessage):
     # If audio was generated, return as multipart or base64
     if audio_data:
         import base64
+        audio_b64 = base64.b64encode(audio_data).decode("utf-8")
+        print(f"📤 Sending response with audio (base64 length: {len(audio_b64)})")
         return {
             "text": coach_response,
-            "audio": base64.b64encode(audio_data).decode("utf-8"),
+            "audio": audio_b64,
             "audio_format": "wav",
             "provider": request.provider,
             "metrics": metrics
         }
     
+    print(f"📤 Sending response WITHOUT audio (TTS failed or not requested)")
     return ChatResponse(
         text=coach_response,
         provider=request.provider,

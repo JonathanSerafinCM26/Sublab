@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import './VoiceRecorder.css'
 
 interface VoiceRecorderProps {
-    onRecordingComplete: (audioBlob: Blob) => void
+    onRecordingComplete: (audioBlob: Blob) => Promise<void>
     onClose?: () => void
 }
 
@@ -15,7 +15,7 @@ Recuerda que este es tu espacio, donde puedes expresarte libremente sin ningún 
 
 Respira profundo, relájate y comencemos esta experiencia transformadora.`
 
-type RecordingState = 'idle' | 'countdown' | 'recording' | 'reviewing' | 'uploading'
+type RecordingState = 'idle' | 'countdown' | 'recording' | 'reviewing' | 'uploading' | 'success' | 'error'
 
 export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderProps) {
     const [state, setState] = useState<RecordingState>('idle')
@@ -24,6 +24,7 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
     const [audioUrl, setAudioUrl] = useState<string | null>(null)
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
     const [error, setError] = useState<string | null>(null)
+
 
     const mediaRecorder = useRef<MediaRecorder | null>(null)
     const audioChunks = useRef<Blob[]>([])
@@ -133,12 +134,19 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
         setState('idle')
     }
 
-    const submitRecording = () => {
+    const submitRecording = async () => {
         if (audioBlob) {
             setState('uploading')
-            onRecordingComplete(audioBlob)
+            try {
+                await onRecordingComplete(audioBlob)
+                setState('success')
+            } catch (err) {
+                setError('Error al procesar la voz. Intenta de nuevo.')
+                setState('error')
+            }
         }
     }
+
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60)
@@ -245,7 +253,35 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
                         <p>Esto puede tomar unos segundos</p>
                     </div>
                 )}
+
+                {state === 'success' && (
+                    <div className="recorder-content success-screen">
+                        <div className="success-icon">✅</div>
+                        <h3>¡Voz procesada exitosamente!</h3>
+                        <p>Tu voz personalizada está lista para usar.</p>
+                        <button className="btn-primary" onClick={onClose}>
+                            Continuar
+                        </button>
+                    </div>
+                )}
+
+                {state === 'error' && (
+                    <div className="recorder-content error-screen">
+                        <div className="error-icon">❌</div>
+                        <h3>Error al procesar</h3>
+                        <p>{error || 'Ocurrió un error inesperado.'}</p>
+                        <div className="error-actions">
+                            <button className="btn-secondary" onClick={retryRecording}>
+                                Reintentar
+                            </button>
+                            <button className="btn-ghost" onClick={onClose}>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
 }
+
