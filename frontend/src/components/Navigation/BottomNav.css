@@ -1,0 +1,82 @@
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    padding: var(--space-sm) var(--space-md);
+    padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom, 0));
+    background: var(--surface-elevated);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px var(--shadow-color);
+    z-index: 100;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: var(--space-sm);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 60px;
+}
+
+.nav-icon {
+    font-size: 1.25rem;
+    transition: transform 0.2s ease;
+}
+
+.nav-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.nav-item.active .nav-icon {
+    transform: scale(1.15);
+}
+
+.nav-item.active .nav-label {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Main (center) button - Coach */
+.nav-item.main {
+    position: relative;
+    margin-top: -20px;
+}
+
+.nav-item.main .nav-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ai-gradient);
+    border-radius: var(--radius-full);
+    font-size: 1.5rem;
+    box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4);
+    transition: all 0.3s ease;
+}
+
+.nav-item.main:hover .nav-icon,
+.nav-item.main.active .nav-icon {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(167, 139, 250, 0.5);
+}
+
+.nav-item.main .nav-label {
+    margin-top: 4px;
+}
+
+.nav-item.main.active .nav-label {
+    color: #8B5CF6;
+}

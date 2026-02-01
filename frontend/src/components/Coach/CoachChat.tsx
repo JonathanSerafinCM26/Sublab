@@ -1,0 +1,252 @@
+import { FC, useState, useRef, useEffect } from 'react'
+import { sendMessage, testTTS } from '../../services/api'
+import './CoachChat.css'
+
+interface CoachChatProps {
+    onBack?: () => void
+    provider?: 'local' | 'cloud'
+}
+
+interface Message {
+    id: string
+    role: 'user' | 'assistant'
+    content: string
+    audioUrl?: string
+    isLoading?: boolean
+}
+
+// Sesiones recomendadas demo
+const recommendedSessions = [
+    {
+        id: 1,
+        title: 'Sesión de Relajación Profunda',
+        duration: 12,
+        priority: 'high' as const,
+        description: 'Basada en tu nivel de estrés actual, te recomiendo esta meditación guiada.',
+        tag: 'Estrés elevado detectado'
+    },
+    {
+        id: 2,
+        title: 'Técnica 4-7-8 para Ansiedad',
+        duration: 5,
+        priority: 'medium' as const,
+        description: 'Ejercicio de respiración personalizado para tu patrón de ansiedad.',
+        tag: null
+    }
+]
+
+export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local' }) => {
+    const [messages, setMessages] = useState<Message[]>([
+        {
+            id: '1',
+            role: 'assistant',
+            content: '¡Hola! Soy tu coach de bienestar. ¿Cómo te sientes hoy? Estoy aquí para ayudarte a encontrar calma y claridad. 🌿'
+        }
+    ])
+    const [input, setInput] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const [showRecommendations, setShowRecommendations] = useState(true)
+    const messagesEndRef = useRef<HTMLDivElement>(null)
+    const audioRef = useRef<HTMLAudioElement>(null)
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [messages])
+
+    const handleSend = async () => {
+        if (!input.trim() || isLoading) return
+
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            role: 'user',
+            content: input
+        }
+
+        setMessages(prev => [...prev, userMessage])
+        setInput('')
+        setIsLoading(true)
+        setShowRecommendations(false)
+
+        // Add loading message
+        const loadingId = (Date.now() + 1).toString()
+        setMessages(prev => [...prev, {
+            id: loadingId,
+            role: 'assistant',
+            content: '',
+            isLoading: true
+        }])
+
+        try {
+            const response = await sendMessage(input, provider)
+
+            // Update with real response
+            setMessages(prev => prev.map(msg =>
+                msg.id === loadingId
+                    ? { ...msg, content: response.text, audioUrl: response.audio_url, isLoading: false }
+                    : msg
+            ))
+        } catch (error) {
+            setMessages(prev => prev.map(msg =>
+                msg.id === loadingId
+                    ? { ...msg, content: 'Lo siento, hubo un error. Intenta de nuevo.', isLoading: false }
+                    : msg
+            ))
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const playAudio = (audioUrl: string) => {
+        if (audioRef.current) {
+            audioRef.current.src = `http://localhost:8000${audioUrl}`
+            audioRef.current.play()
+        }
+    }
+
+    const startSession = async (session: typeof recommendedSessions[0]) => {
+        // Simular inicio de sesión
+        const systemMessage: Message = {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: `Iniciando "${session.title}"... Encuentra una posición cómoda y cierra los ojos. Vamos a comenzar con unas respiraciones profundas. 🧘‍♀️`
+        }
+        setMessages(prev => [...prev, systemMessage])
+        setShowRecommendations(false)
+
+        // Generate TTS for the session intro
+        try {
+            const audio = await testTTS(systemMessage.content, provider)
+            if (audio.audio_url) {
+                playAudio(audio.audio_url)
+            }
+        } catch (e) {
+            console.error('Error playing TTS:', e)
+        }
+    }
+
+    return (
+        <div className="coach-chat-page">
+            {/* Header */}
+            <div className="chat-header">
+                {onBack && (
+                    <button className="back-btn" onClick={onBack}>
+                        ←
+                    </button>
+                )}
+                <div className="header-content">
+                    <h1>✨ IA Personalizada</h1>
+                    <p>Sugerencias adaptadas a tu progreso</p>
+                </div>
+            </div>
+
+            {/* Analysis Card */}
+            <div className="analysis-card animate-fadeIn">
+                <div className="analysis-icon">
+                    <span>🎯</span>
+                </div>
+                <div className="analysis-content">
+                    <h3>Análisis Completado</h3>
+                    <p>He identificado 3 áreas para optimizar hoy</p>
+                </div>
+            </div>
+
+            {/* Recommended Sessions */}
+            {showRecommendations && (
+                <div className="recommendations animate-fadeInUp">
+                    {recommendedSessions.map((session, index) => (
+                        <div
+                            key={session.id}
+                            className={`session-card animate-fadeInUp stagger-${index + 1}`}
+                        >
+                            <div className="session-header">
+                                <span className="session-icon">🎧</span>
+                                <div className="session-info">
+                                    <h4>{session.title}</h4>
+                                    <span className={`priority-badge priority-${session.priority}`}>
+                                        Prioridad {session.priority === 'high' ? 'alta' : 'media'}
+                                    </span>
+                                </div>
+                                <div className="session-duration">
+                                    <span className="duration-icon">⏱</span>
+                                    <span>{session.duration} min</span>
+                                </div>
+                            </div>
+                            <p className="session-description">{session.description}</p>
+                            <div className="session-footer">
+                                {session.tag && (
+                                    <span className="session-tag">
+                                        ⚡ {session.tag}
+                                    </span>
+                                )}
+                                <button
+                                    className="btn btn-accent btn-sm"
+                                    onClick={() => startSession(session)}
+                                >
+                                    Comenzar
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Messages */}
+            <div className="messages-container">
+                {messages.map(message => (
+                    <div
+                        key={message.id}
+                        className={`message ${message.role} animate-fadeIn`}
+                    >
+                        {message.role === 'assistant' && (
+                            <div className="message-avatar">🤖</div>
+                        )}
+                        <div className="message-content">
+                            {message.isLoading ? (
+                                <div className="typing-indicator">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            ) : (
+                                <>
+                                    <p>{message.content}</p>
+                                    {message.audioUrl && (
+                                        <button
+                                            className="play-audio-btn"
+                                            onClick={() => playAudio(message.audioUrl!)}
+                                        >
+                                            🔊 Escuchar
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                ))}
+                <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input */}
+            <div className="chat-input-container">
+                <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                    placeholder="Escribe un mensaje..."
+                    disabled={isLoading}
+                    className="chat-input"
+                />
+                <button
+                    className="send-btn"
+                    onClick={handleSend}
+                    disabled={isLoading || !input.trim()}
+                >
+                    ▶
+                </button>
+            </div>
+
+            <audio ref={audioRef} />
+        </div>
+    )
+}

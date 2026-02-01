@@ -1,63 +1,76 @@
 import { useState } from 'react'
+import { HomePage } from './components/Home/HomePage'
+import { CoachChat } from './components/Coach/CoachChat'
+import { Evolution } from './components/Evolution/Evolution'
+import { Practices } from './components/Practices/Practices'
+import { BottomNav } from './components/Navigation/BottomNav'
 import { VoiceSettingsPanel } from './components/Lab/VoiceSettingsPanel'
-import { ChatInterface } from './components/Chat/ChatInterface'
 import './App.css'
 
+type Page = 'home' | 'coach' | 'evolution' | 'practices' | 'settings'
 type Provider = 'local' | 'cloud'
 
 function App() {
-    const [provider, setProvider] = useState<Provider>('cloud')
-    const [showSettings, setShowSettings] = useState(false)
+    const [currentPage, setCurrentPage] = useState<Page>('home')
+    const [provider, setProvider] = useState<Provider>('local')
+
+    const handleNavigate = (page: Page | 'coach' | 'evolution' | 'practices') => {
+        setCurrentPage(page as Page)
+    }
+
+    const renderPage = () => {
+        switch (currentPage) {
+            case 'home':
+                return <HomePage onNavigate={handleNavigate} />
+
+            case 'coach':
+                return (
+                    <CoachChat
+                        onBack={() => setCurrentPage('home')}
+                        provider={provider}
+                    />
+                )
+
+            case 'evolution':
+                return <Evolution onBack={() => setCurrentPage('home')} />
+
+            case 'practices':
+                return (
+                    <Practices
+                        onBack={() => setCurrentPage('home')}
+                        onStartPractice={(id) => {
+                            console.log('Starting practice:', id)
+                            // Aquí se podría navegar a la pantalla de práctica
+                        }}
+                    />
+                )
+
+            case 'settings':
+                return (
+                    <div className="settings-page">
+                        <VoiceSettingsPanel
+                            provider={provider}
+                            onProviderChange={setProvider}
+                            onClose={() => setCurrentPage('home')}
+                        />
+                    </div>
+                )
+
+            default:
+                return <HomePage onNavigate={handleNavigate} />
+        }
+    }
 
     return (
         <div className="app">
-            <header className="app-header">
-                <div className="header-content">
-                    <h1 className="logo">
-                        <span className="logo-icon">🎙️</span>
-                        SubLab
-                    </h1>
-                    <p className="tagline">Laboratorio de Voz</p>
-                </div>
-                <button
-                    className="settings-btn"
-                    onClick={() => setShowSettings(!showSettings)}
-                >
-                    ⚙️ Configuración
-                </button>
-            </header>
-
             <main className="app-main">
-                {showSettings && (
-                    <VoiceSettingsPanel
-                        provider={provider}
-                        onProviderChange={setProvider}
-                        onClose={() => setShowSettings(false)}
-                    />
-                )}
-
-                <ChatInterface provider={provider} />
+                {renderPage()}
             </main>
 
-            <footer className="app-footer">
-                <div className="provider-indicator">
-                    {provider === 'local' ? (
-                        <span className="badge local">
-                            🟢 Modo Privado (Local) • $0 • En Dispositivo
-                        </span>
-                    ) : (
-                        <span className="badge cloud">
-                            🔵 Modo HD (Cloud) • ~$0.001 • Fish Audio
-                        </span>
-                    )}
-                </div>
-                <button
-                    className="toggle-quick"
-                    onClick={() => setProvider(p => p === 'local' ? 'cloud' : 'local')}
-                >
-                    Cambiar a {provider === 'local' ? 'Cloud' : 'Local'}
-                </button>
-            </footer>
+            <BottomNav
+                currentPage={currentPage}
+                onNavigate={handleNavigate}
+            />
         </div>
     )
 }

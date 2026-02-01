@@ -1,0 +1,316 @@
+.coach-chat-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--background-gradient);
+}
+
+/* Header */
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--surface);
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.chat-header .back-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--border);
+    border: none;
+    border-radius: var(--radius-full);
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chat-header .back-btn:hover {
+    background: var(--primary-light);
+    color: var(--text-light);
+}
+
+.header-content h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 2px;
+}
+
+.header-content p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Analysis Card */
+.analysis-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin: var(--space-lg);
+    padding: var(--space-md);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.analysis-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(107, 91, 149, 0.2), rgba(136, 176, 75, 0.2));
+    border-radius: var(--radius-full);
+    font-size: 1.25rem;
+}
+
+.analysis-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.analysis-content p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Recommendations */
+.recommendations {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    padding: 0 var(--space-lg);
+}
+
+.session-card {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--primary-light);
+}
+
+.session-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.session-icon {
+    font-size: 1.5rem;
+}
+
+.session-info {
+    flex: 1;
+}
+
+.session-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-xs);
+}
+
+.session-duration {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.session-description {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: var(--space-md);
+}
+
+.session-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.session-tag {
+    font-size: 0.75rem;
+    color: var(--priority-high-text);
+    background: var(--priority-high);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+}
+
+/* Messages */
+.messages-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    overflow-y: auto;
+}
+
+.message {
+    display: flex;
+    gap: var(--space-sm);
+    max-width: 85%;
+}
+
+.message.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message.assistant {
+    align-self: flex-start;
+}
+
+.message-avatar {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ai-gradient);
+    border-radius: var(--radius-full);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.message-content {
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.message.assistant .message-content {
+    background: var(--surface);
+    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px;
+}
+
+.message.user .message-content {
+    background: var(--primary);
+    color: var(--text-light);
+    border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
+}
+
+.play-audio-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+    padding: 6px 12px;
+    background: rgba(107, 91, 149, 0.1);
+    border: none;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    color: var(--primary);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.play-audio-btn:hover {
+    background: rgba(107, 91, 149, 0.2);
+}
+
+/* Typing indicator */
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: var(--space-sm);
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: var(--primary-light);
+    border-radius: var(--radius-full);
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+}
+
+/* Input */
+.chat-input-container {
+    display: flex;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--surface);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: 0 -4px 16px var(--shadow-color);
+}
+
+.chat-input {
+    flex: 1;
+    padding: var(--space-md);
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.chat-input:focus {
+    border-color: var(--primary);
+}
+
+.chat-input::placeholder {
+    color: var(--text-dim);
+}
+
+.send-btn {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    border: none;
+    border-radius: var(--radius-full);
+    color: var(--text-light);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.send-btn:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+.send-btn:disabled {
+    background: var(--text-dim);
+    cursor: not-allowed;
+}
