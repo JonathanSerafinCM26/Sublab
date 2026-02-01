@@ -14,8 +14,10 @@ asyncpg==0.29.0
 TTS
 transformers==4.40.2
 # torch and torchaudio will be installed by TTS
+numpy<2.0.0
+torchcodec
 soundfile==0.12.1
-kokoro-onnx==0.5.0
+kokoro-onnx<0.5.0
 
 # HTTP Client for Fish Audio
 httpx==0.26.0

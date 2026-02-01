@@ -1,0 +1,6 @@
+{
+  "voice_id": "coach_voice",
+  "reference_audio": "/app/voices/xtts/coach_voice/reference.wav",
+  "created_at": 1769982736.1929376,
+  "provider": "xtts-v2"
+}

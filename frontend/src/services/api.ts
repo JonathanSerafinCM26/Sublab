@@ -32,11 +32,17 @@ export interface TTSResponse {
 }
 
 export interface VoiceCloneResponse {
-    local_id?: string
+    local: {
+        status: string
+        message?: string
+        metadata?: {
+            voice_id: string
+            reference_audio: string
+        }
+        processing_time?: number
+    }
     cloud_id?: string
-    local_status: string
     cloud_status: string
-    processing_time_local?: number
     processing_time_cloud?: number
 }
 
@@ -69,11 +75,13 @@ export interface VoiceStatus {
  */
 export async function sendMessage(
     message: string,
-    provider: 'local' | 'cloud' = 'cloud'
+    provider: 'local' | 'cloud' = 'cloud',
+    voiceId?: string
 ): Promise<ChatResponse> {
     const response = await api.post('/api/chat/generate', {
         message,
         provider,
+        voice_id: voiceId,
         include_audio: true,
     })
     return response.data
@@ -84,11 +92,13 @@ export async function sendMessage(
  */
 export async function testTTS(
     text: string,
-    provider: 'local' | 'cloud' = 'cloud'
+    provider: 'local' | 'cloud' = 'cloud',
+    voiceId?: string
 ): Promise<Blob> {
     const response = await api.post('/api/chat/test-tts', {
         text,
         provider,
+        voice_id: voiceId,
     }, {
         responseType: 'blob',
     })

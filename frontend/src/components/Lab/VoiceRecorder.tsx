@@ -292,8 +292,11 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
                         <h3>Error al procesar</h3>
                         <p>{error || 'Ocurrió un error inesperado.'}</p>
                         <div className="error-actions">
+                            <button className="submit-btn" onClick={submitRecording}>
+                                🔄 Reintentar Envío
+                            </button>
                             <button className="btn-secondary" onClick={retryRecording}>
-                                Reintentar
+                                🎙️ Grabar de Nuevo
                             </button>
                             <button className="btn-ghost" onClick={onClose}>
                                 Cancelar

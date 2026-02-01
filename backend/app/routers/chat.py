@@ -9,6 +9,7 @@ import io
 # from app.services.tts import f5_service
 from app.services.tts import xtts_service
 from app.services.tts import fish_service
+from app.services.llm import llm_service
 
 
 router = APIRouter()
@@ -86,7 +87,10 @@ async def generate_chat_response(request: ChatMessage):
                 )
             
             metrics["tts_latency_ms"] = int((time.time() - tts_start) * 1000)
-            print(f"✅ TTS: Audio generated! Size: {len(audio_data)} bytes, Latency: {metrics['tts_latency_ms']}ms")
+            if audio_data:
+                print(f"✅ TTS: Audio generated! Size: {len(audio_data)} bytes, Latency: {metrics['tts_latency_ms']}ms")
+            else:
+                print("⚠️ TTS: No audio data generated.")
             
         except Exception as e:
             print(f"❌ TTS error: {e}")

@@ -8,12 +8,16 @@ type Provider = 'local' | 'cloud'
 interface VoiceSettingsPanelProps {
     provider: Provider
     onProviderChange: (provider: Provider) => void
+    selectedVoiceId: string
+    onVoiceSelect: (voiceId: string) => void
     onClose: () => void
 }
 
 export const VoiceSettingsPanel: FC<VoiceSettingsPanelProps> = ({
     provider,
     onProviderChange,
+    selectedVoiceId,
+    onVoiceSelect,
     onClose,
 }) => {
     const [showRecorder, setShowRecorder] = useState(false)
@@ -39,10 +43,11 @@ export const VoiceSettingsPanel: FC<VoiceSettingsPanelProps> = ({
         setCloneSuccess(null)
 
         try {
-            const result = await cloneVoice(audioBlob, 'coach')
+            const result = await cloneVoice(audioBlob, 'coach_voice')
 
             if (result.local.status === 'success' && result.local.metadata) {
-                setCloneSuccess(`¡Voz clonada exitosamente! ID: ${result.local.metadata.voice_id}`)
+                setCloneSuccess(`¡Voz clonada exitosamente!`)
+                onVoiceSelect(result.local.metadata.voice_id)
             } else if (result.local.status === 'error') {
                 throw new Error(result.local.message || 'Error desconocido')
             } else {
@@ -132,7 +137,8 @@ export const VoiceSettingsPanel: FC<VoiceSettingsPanelProps> = ({
                                 {voiceStatus.local.voices.map((voice: any) => (
                                     <div
                                         key={voice.id}
-                                        className={`voice-item ${voice.custom ? 'custom' : ''}`}
+                                        className={`voice-item ${voice.custom ? 'custom' : ''} ${selectedVoiceId === voice.id ? 'selected' : ''}`}
+                                        onClick={() => onVoiceSelect(voice.id)}
                                     >
                                         <span className="voice-name">{voice.name}</span>
                                         {voice.custom && (

@@ -13,6 +13,7 @@ type Provider = 'local' | 'cloud'
 function App() {
     const [currentPage, setCurrentPage] = useState<Page>('home')
     const [provider, setProvider] = useState<Provider>('local')
+    const [selectedVoiceId, setSelectedVoiceId] = useState<string>('coach_voice')
 
     const handleNavigate = (page: Page | 'coach' | 'evolution' | 'practices') => {
         setCurrentPage(page as Page)
@@ -28,6 +29,7 @@ function App() {
                     <CoachChat
                         onBack={() => setCurrentPage('home')}
                         provider={provider}
+                        voiceId={selectedVoiceId}
                     />
                 )
 
@@ -51,6 +53,8 @@ function App() {
                         <VoiceSettingsPanel
                             provider={provider}
                             onProviderChange={setProvider}
+                            selectedVoiceId={selectedVoiceId}
+                            onVoiceSelect={setSelectedVoiceId}
                             onClose={() => setCurrentPage('home')}
                         />
                     </div>
