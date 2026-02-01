@@ -15,6 +15,8 @@ export default defineConfig({
             '/api': {
                 target: 'http://backend:8000',
                 changeOrigin: true,
+                timeout: 300000,        // 5 minutos
+                proxyTimeout: 300000,   // 5 minutos
             },
         },
     },
