@@ -5,8 +5,10 @@ from typing import Optional, Literal
 import time
 import io
 
-from app.services.tts import kokoro_service, fish_service
-from app.services.llm import llm_service
+# from app.services.tts import kokoro_service
+# from app.services.tts import f5_service
+from app.services.tts import xtts_service
+from app.services.tts import fish_service
 
 
 router = APIRouter()
@@ -69,9 +71,9 @@ async def generate_chat_response(request: ChatMessage):
         
         try:
             if request.provider == "local":
-                if not kokoro_service.is_initialized:
-                    raise RuntimeError("Kokoro TTS no está inicializado. Espera a que cargue el modelo.")
-                audio_data = await kokoro_service.generate_audio(
+                if not xtts_service.is_initialized:
+                    raise RuntimeError("XTTS v2 not initialized. Espera a que cargue el modelo.")
+                audio_data = await xtts_service.generate_audio(
                     coach_response, 
                     request.voice_id
                 )
@@ -127,12 +129,12 @@ async def test_tts(request: TTSTestRequest):
     
     try:
         if request.provider == "local":
-            if not kokoro_service.is_initialized:
+            if not xtts_service.is_initialized:
                 raise HTTPException(
                     status_code=503, 
-                    detail="Kokoro TTS not initialized. Model files may be downloading."
+                    detail="XTTS v2 not initialized. Model files may be downloading."
                 )
-            audio_data = await kokoro_service.generate_audio(
+            audio_data = await xtts_service.generate_audio(
                 request.text, 
                 request.voice_id
             )
@@ -177,22 +179,24 @@ async def compare_tts(text: str, voice_id: Optional[str] = None):
     
     import base64
     
-    # Generate with Local (Kokoro)
-    if kokoro_service.is_initialized:
+    # Generate Local (XTTS v2)
+    if xtts_service.is_initialized:
         try:
-            start = time.time()
-            audio = await kokoro_service.generate_audio(text, voice_id)
+            t0 = time.time()
+            local_audio = await xtts_service.generate_audio(text, voice_id)
+            t1 = time.time()
             results["local"] = {
-                "status": "success",
-                "latency_ms": int((time.time() - start) * 1000),
-                "audio": base64.b64encode(audio).decode("utf-8"),
+                "provider": "xtts-v2",
+                "time": f"{t1-t0:.2f}s",
+                "audio_size": len(local_audio) if local_audio else 0,
+                "audio": base64.b64encode(local_audio).decode("utf-8"),
                 "cost": "$0.00",
                 "privacy": "En Dispositivo"
             }
         except Exception as e:
-            results["local"] = {"status": "error", "error": str(e)}
+            results["local"] = {"error": str(e)}
     else:
-        results["local"]["status"] = "not_initialized"
+        results["local"] = {"error": "XTTS Not initialized"}
     
     # Generate with Cloud (Fish Audio)
     if fish_service.is_configured:

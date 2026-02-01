@@ -6,7 +6,7 @@ import os
 
 from app.core.config import settings
 from app.routers import voice, chat
-from app.services.tts.kokoro_service import kokoro_service
+from app.services.tts.xtts_service import xtts_service
 
 
 @asynccontextmanager
@@ -14,12 +14,13 @@ async def lifespan(app: FastAPI):
     """Lifespan handler - load models at startup."""
     print("🚀 Starting SubLab MVP...")
     
-    # Initialize Kokoro TTS (load model once)
+    # Initialize XTTS v2 (load model once)
     try:
-        await kokoro_service.initialize()
-        print("✅ Kokoro TTS initialized")
+        await xtts_service.initialize()
+        print("✅ XTTS v2 initialized (Spanish voice cloning ready)")
     except Exception as e:
-        print(f"⚠️ Kokoro TTS not available: {e}")
+        print(f"⚠️ XTTS v2 not available: {e}")
+        print("   TTS will use fallback")
     
     yield
     
@@ -29,7 +30,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="SubLab MVP",
-    description="Voice Laboratory - Compare Local TTS (Kokoro) vs Cloud TTS (Fish Audio)",
+    description="Voice Laboratory - Compare Local TTS (XTTS v2) vs Cloud TTS (Fish Audio)",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -70,6 +71,6 @@ async def health():
     """Health check endpoint."""
     return {
         "status": "ok",
-        "kokoro_available": kokoro_service.is_initialized,
+        "xtts_available": xtts_service.is_initialized,
         "fish_audio_configured": bool(settings.fish_audio_api_key)
     }

@@ -9,9 +9,13 @@ sqlalchemy==2.0.25
 psycopg2-binary==2.9.9
 asyncpg==0.29.0
 
-# TTS - Kokoro ONNX
-kokoro-onnx==0.5.0
+# TTS - XTTS v2 (Local voice cloning with Spanish support)
+# Using Coqui TTS
+TTS
+transformers==4.40.2
+# torch and torchaudio will be installed by TTS
 soundfile==0.12.1
+kokoro-onnx==0.5.0
 
 # HTTP Client for Fish Audio
 httpx==0.26.0
@@ -27,5 +31,5 @@ pydub==0.25.1
 pydantic==2.5.3
 pydantic-settings==2.1.0
 
-# HuggingFace for model downloads
-huggingface-hub==0.20.3
+# HuggingFace for model downloads (>=0.21.0 required for F5-TTS/accelerate)
+huggingface-hub>=0.21.0

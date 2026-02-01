@@ -101,7 +101,7 @@ export async function testTTS(
 export async function cloneVoice(
     audioBlob: Blob,
     voiceName: string = 'coach'
-): Promise<{ voice_id: string; message: string }> {
+): Promise<VoiceCloneResponse> {
     const formData = new FormData()
     formData.append('audio', audioBlob, `${voiceName}.webm`)
     formData.append('voice_name', voiceName)

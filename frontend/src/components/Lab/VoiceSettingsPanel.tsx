@@ -40,7 +40,14 @@ export const VoiceSettingsPanel: FC<VoiceSettingsPanelProps> = ({
 
         try {
             const result = await cloneVoice(audioBlob, 'coach')
-            setCloneSuccess(`¡Voz clonada exitosamente! ID: ${result.voice_id}`)
+
+            if (result.local.status === 'success' && result.local.metadata) {
+                setCloneSuccess(`¡Voz clonada exitosamente! ID: ${result.local.metadata.voice_id}`)
+            } else if (result.local.status === 'error') {
+                throw new Error(result.local.message || 'Error desconocido')
+            } else {
+                setCloneSuccess('Voz procesada (pendiente de validación)')
+            }
             // Reload status to show new voice
             await loadVoiceStatus()
             // Note: Don't close here - let VoiceRecorder show success screen

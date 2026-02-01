@@ -26,6 +26,7 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
     const [error, setError] = useState<string | null>(null)
 
 
+    const isStartingRef = useRef(false)
     const mediaRecorder = useRef<MediaRecorder | null>(null)
     const audioChunks = useRef<Blob[]>([])
     const timerRef = useRef<number | null>(null)
@@ -40,7 +41,29 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
         }
     }, [audioUrl])
 
+    // Monitor countdown interval
+    useEffect(() => {
+        let interval: number | null = null;
+        if (state === 'countdown') {
+            interval = window.setInterval(() => {
+                setCountdown((prev: number) => Math.max(0, prev - 1));
+            }, 1000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [state])
+
+    // Monitor countdown value to start recording
+    useEffect(() => {
+        if (state === 'countdown' && countdown <= 0) {
+            startRecording()
+        }
+    }, [countdown, state])
+
     const startCountdown = async () => {
+        if (state !== 'idle' || isStartingRef.current) return;
+        isStartingRef.current = true;
         setError(null)
 
         try {
@@ -54,11 +77,12 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
             })
 
             // Setup MediaRecorder
-            const options = { mimeType: 'audio/webm;codecs=opus' }
+            // Use lighter mimeType for broader compatibility
+            const options = { mimeType: 'audio/webm' }
             mediaRecorder.current = new MediaRecorder(stream, options)
             audioChunks.current = []
 
-            mediaRecorder.current.ondataavailable = (e) => {
+            mediaRecorder.current.ondataavailable = (e: BlobEvent) => {
                 if (e.data.size > 0) {
                     audioChunks.current.push(e.data)
                 }
@@ -79,31 +103,27 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
             setState('countdown')
             setCountdown(3)
 
-            countdownRef.current = window.setInterval(() => {
-                setCountdown(prev => {
-                    if (prev <= 1) {
-                        clearInterval(countdownRef.current!)
-                        startRecording()
-                        return 0
-                    }
-                    return prev - 1
-                })
-            }, 1000)
-
         } catch (err) {
+            console.error(err)
+            isStartingRef.current = false
             setError('No se pudo acceder al micrófono. Verifica los permisos.')
             setState('idle')
         }
     }
 
     const startRecording = () => {
+        // Prevent double start in StrictMode or race conditions
+        if (!mediaRecorder.current || mediaRecorder.current.state !== 'inactive') {
+            return
+        }
+
         setState('recording')
         setRecordingTime(0)
 
-        mediaRecorder.current?.start(100) // Collect data every 100ms
+        mediaRecorder.current.start(100) // Collect data every 100ms
 
         timerRef.current = window.setInterval(() => {
-            setRecordingTime(prev => {
+            setRecordingTime((prev: number) => {
                 // Auto-stop after 30 seconds
                 if (prev >= 30) {
                     stopRecording()
@@ -131,6 +151,7 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
         }
         setAudioUrl(null)
         setAudioBlob(null)
+        isStartingRef.current = false
         setState('idle')
     }
 
