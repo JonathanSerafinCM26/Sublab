@@ -4,8 +4,10 @@ import { CoachChat } from './components/Coach/CoachChat'
 import { Evolution } from './components/Evolution/Evolution'
 import { Practices } from './components/Practices/Practices'
 import { BottomNav } from './components/Navigation/BottomNav'
+import { Sidebar } from './components/Navigation/Sidebar'
 import { VoiceSettingsPanel } from './components/Lab/VoiceSettingsPanel'
 import './App.css'
+import './components/Navigation/Sidebar.css'
 
 type Page = 'home' | 'coach' | 'evolution' | 'practices' | 'settings'
 type Provider = 'local' | 'cloud'
@@ -67,6 +69,11 @@ function App() {
 
     return (
         <div className="app">
+            <Sidebar
+                currentPage={currentPage}
+                onNavigate={handleNavigate}
+            />
+
             <main className="app-main">
                 {renderPage()}
             </main>

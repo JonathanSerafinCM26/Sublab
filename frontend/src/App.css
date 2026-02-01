@@ -8,15 +8,43 @@
 .app-main {
     flex: 1;
     padding-bottom: 80px;
-    /* Space for bottom nav */
+    /* Space for bottom nav on mobile */
     overflow-y: auto;
 }
 
 /* Settings Page Wrapper */
 .settings-page {
     padding: var(--space-lg);
+    width: 100%;
     max-width: 480px;
+    /* Default for mobile/settings */
     margin: 0 auto;
+}
+
+/* Desktop Styles */
+@media (min-width: 769px) {
+    .app {
+        flex-direction: row;
+        /* Sidebar + Main */
+    }
+
+    .app-main {
+        padding-bottom: 0;
+        padding: var(--space-xl);
+        max-width: 100%;
+        /* Unlock full width */
+        overflow-y: auto;
+    }
+
+    /* Hide Bottom Nav on Desktop */
+    .app>nav {
+        display: none;
+    }
+
+    /* Settings page can be wider on desktop but still contained */
+    .settings-page {
+        max-width: 800px;
+    }
 }
 
 /* Page Transitions */
@@ -47,6 +75,7 @@
     .app-main {
         padding-left: var(--space-sm);
         padding-right: var(--space-sm);
+        padding-top: var(--space-md);
     }
 }
 
@@ -54,5 +83,11 @@
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .app-main {
         padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    }
+
+    @media (min-width: 769px) {
+        .app-main {
+            padding-bottom: var(--space-xl);
+        }
     }
 }

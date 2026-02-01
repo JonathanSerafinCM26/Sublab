@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import './Practices.css'
 
 interface PracticesProps {
@@ -42,12 +42,37 @@ const todayPractices = [
     }
 ]
 
-export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice }) => {
-    const completedCount = todayPractices.filter(p => p.completed).length
+export const Practices: FC<PracticesProps> = ({ onBack }) => { // Removed onStartPractice from props as we handle it internally now
+    const [practices, setPractices] = useState(todayPractices)
+    const [activePracticeId, setActivePracticeId] = useState<string | null>(null)
+    const [isPlaying, setIsPlaying] = useState(false)
+
+    const completedCount = practices.filter(p => p.completed).length
+
+    const handleStartPractice = (id: string) => {
+        setActivePracticeId(id)
+        setIsPlaying(true)
+    }
+
+    const handleComplete = (id: string) => {
+        setPractices(prev => prev.map(p =>
+            p.id === id ? { ...p, completed: true } : p
+        ))
+        setIsPlaying(false)
+        setActivePracticeId(null)
+    }
+
+    const closePlayer = () => {
+        setIsPlaying(false)
+        setActivePracticeId(null)
+    }
+
+    const activePractice = practices.find(p => p.id === activePracticeId)
 
     return (
         <div className="practices-page">
-            {/* Header */}
+            {/* ... Existing header and progress ... */}
+
             <div className="practices-header animate-fadeIn">
                 {onBack && (
                     <button className="back-btn" onClick={onBack}>
@@ -58,23 +83,22 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice }) => {
                 <p className="subtitle">Tu entrenamiento personalizado</p>
             </div>
 
-            {/* Progress */}
             <div className="daily-progress card animate-fadeInUp">
                 <div className="progress-info">
                     <span className="progress-label">Progreso de Hoy</span>
-                    <span className="progress-count">{completedCount}/{todayPractices.length}</span>
+                    <span className="progress-count">{completedCount}/{practices.length}</span>
                 </div>
                 <div className="progress-bar">
                     <div
                         className="progress-fill success"
-                        style={{ width: `${(completedCount / todayPractices.length) * 100}%` }}
+                        style={{ width: `${(completedCount / practices.length) * 100}%` }}
                     ></div>
                 </div>
             </div>
 
             {/* Practices List */}
             <div className="practices-list">
-                {todayPractices.map((practice, index) => (
+                {practices.map((practice, index) => (
                     <div
                         key={practice.id}
                         className={`practice-card animate-fadeInUp stagger-${index + 1} ${practice.completed ? 'completed' : ''}`}
@@ -101,7 +125,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice }) => {
 
                         <button
                             className={`practice-action-btn ${practice.completed ? 'replay' : 'start'}`}
-                            onClick={() => onStartPractice?.(practice.id)}
+                            onClick={() => handleStartPractice(practice.id)}
                         >
                             {practice.completed ? '↻' : '▶'}
                         </button>
@@ -109,13 +133,38 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice }) => {
                 ))}
             </div>
 
-            {/* Motivation Card */}
-            <div className="motivation-card card-glass animate-fadeInUp stagger-5">
-                <div className="motivation-icon">💪</div>
-                <p>
-                    <strong>¡Sigue así!</strong> Cada práctica te acerca más a tu mejor versión.
-                </p>
-            </div>
+            {/* Mock Player Overlay */}
+            {isPlaying && activePractice && (
+                <div className="player-overlay animate-fadeIn">
+                    <div className="player-card">
+                        <button className="close-player" onClick={closePlayer}>✕</button>
+                        <div className="player-icon">{activePractice.icon}</div>
+                        <h2>{activePractice.title}</h2>
+                        <p>Reproduciendo sesión...</p>
+
+                        <div className="audio-visualizer">
+                            <div className="bar b1"></div>
+                            <div className="bar b2"></div>
+                            <div className="bar b3"></div>
+                            <div className="bar b4"></div>
+                            <div className="bar b5"></div>
+                        </div>
+
+                        <div className="player-controls">
+                            <button className="control-btn secondary">⏪</button>
+                            <button className="control-btn primary">⏸</button>
+                            <button className="control-btn secondary">⏩</button>
+                        </div>
+
+                        <button
+                            className="btn btn-success complete-btn"
+                            onClick={() => handleComplete(activePractice.id)}
+                        >
+                            Marcar como Completado
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -6,101 +6,113 @@ interface HomePageProps {
 }
 
 export const HomePage: FC<HomePageProps> = ({ onNavigate }) => {
+    // Mock user name (could be prop later)
+    const userName = "Rubén"
+    const today = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+
     return (
         <div className="home-page">
-            {/* Hero Section */}
-            <div className="hero-section animate-fadeIn">
-                <div className="hero-icon animate-float">
-                    <div className="diamond-container">
-                        <div className="diamond">💎</div>
-                        <div className="orbit-ring"></div>
+            {/* Header Section */}
+            <header className="dashboard-header animate-fadeIn">
+                <div className="greeting-container">
+                    <h1 className="greeting">Hola, {userName}</h1>
+                    <p className="date-display">{today}</p>
+                </div>
+                <div className="user-mood">
+                    <span>¿Cómo te sientes hoy?</span>
+                    <div className="mood-selector">
+                        <button className="mood-btn" title="Bien">😊</button>
+                        <button className="mood-btn" title="Regular">😐</button>
+                        <button className="mood-btn" title="Mal">😔</button>
                     </div>
                 </div>
+            </header>
 
-                <h1 className="hero-title">SubLab</h1>
-                <p className="hero-subtitle">
-                    <span className="icon-brain">🧠</span>
-                    Entrena tu subconsciente
-                    <span className="icon-sparkle">✨</span>
-                </p>
+            {/* Main Grid */}
+            <div className="dashboard-grid">
 
-                <p className="hero-description">
-                    Transforma tu mente con ejercicios personalizados,
-                    seguimiento de progreso y IA avanzada.
-                </p>
-
-                <button
-                    className="btn btn-primary hero-cta animate-breathe"
-                    onClick={() => onNavigate('coach')}
-                >
-                    Comenzar Entrenamiento
-                </button>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="quick-actions animate-fadeInUp stagger-2">
-                <button
-                    className="action-card"
-                    onClick={() => onNavigate('practices')}
-                >
-                    <div className="action-icon">
-                        <span>🎯</span>
+                {/* Hero / Daily Focus */}
+                <section className="hero-card animate-fadeInUp">
+                    <div className="hero-content">
+                        <div className="focus-badge">🎯 Enfoque Diario</div>
+                        <h2>Reducir Ansiedad</h2>
+                        <p>Tu coach ha preparado una sesión especial para hoy.</p>
+                        <button
+                            className="btn btn-primary mt-md"
+                            onClick={() => onNavigate('coach')}
+                        >
+                            Comenzar Sesión con IA
+                        </button>
                     </div>
-                    <span className="action-label">Ejercicios</span>
-                </button>
-
-                <button
-                    className="action-card"
-                    onClick={() => onNavigate('coach')}
-                >
-                    <div className="action-icon ai">
-                        <span>✨</span>
+                    <div className="hero-visual">
+                        <div className="orbit-visual">
+                            <div className="planet"></div>
+                            <div className="orbit o1"></div>
+                            <div className="orbit o2"></div>
+                        </div>
                     </div>
-                    <span className="action-label">IA Personal</span>
-                </button>
-            </div>
+                </section>
 
-            {/* Progress Summary */}
-            <div className="progress-summary card animate-fadeInUp stagger-3">
-                <div className="progress-header">
-                    <span className="progress-icon">📊</span>
-                    <h3>Tu Progreso Semanal</h3>
-                </div>
-                <div className="progress-stats">
-                    <div className="stat-item">
-                        <span className="stat-value">87%</span>
-                        <span className="stat-label">Mejora General</span>
+                {/* Quick Stats */}
+                <section className="stats-row animate-fadeInUp stagger-1">
+                    <div className="stat-card">
+                        <div className="stat-icon">🔥</div>
+                        <div className="stat-info">
+                            <span className="value">12</span>
+                            <span className="label">Racha (días)</span>
+                        </div>
                     </div>
-                    <div className="stat-divider"></div>
-                    <div className="stat-item">
-                        <span className="stat-value">12</span>
-                        <span className="stat-label">Días Activos</span>
+                    <div className="stat-card">
+                        <div className="stat-icon">⏰</div>
+                        <div className="stat-info">
+                            <span className="value">45m</span>
+                            <span className="label">Minutos Hoy</span>
+                        </div>
                     </div>
-                </div>
-                <button
-                    className="btn btn-ghost progress-link"
-                    onClick={() => onNavigate('evolution')}
-                >
-                    Ver Tu Evolución →
-                </button>
-            </div>
+                    <div className="stat-card">
+                        <div className="stat-icon">📈</div>
+                        <div className="stat-info">
+                            <span className="value">87%</span>
+                            <span className="label">Bienestar</span>
+                        </div>
+                    </div>
+                </section>
 
-            {/* AI Coach Teaser */}
-            <div className="coach-teaser card-glass animate-fadeInUp stagger-4">
-                <div className="coach-avatar">
-                    <span>🤖</span>
-                </div>
-                <div className="coach-content">
-                    <p className="coach-message">
-                        ¡Hola! He identificado <strong>3 áreas</strong> para optimizar hoy.
-                    </p>
-                    <button
-                        className="btn btn-accent btn-sm"
-                        onClick={() => onNavigate('coach')}
-                    >
-                        Hablar con tu Coach
-                    </button>
-                </div>
+                {/* Quick Actions / Recommendations */}
+                <section className="recommendations-row animate-fadeInUp stagger-2">
+                    <div className="section-header">
+                        <h3>Recomendado para ti</h3>
+                        <button className="link-btn" onClick={() => onNavigate('practices')}>Ver todo</button>
+                    </div>
+
+                    <div className="cards-scroll">
+                        <div className="rec-card" onClick={() => onNavigate('practices')}>
+                            <div className="rec-icon audio">🎧</div>
+                            <div className="rec-info">
+                                <h4>Meditación Matutina</h4>
+                                <span>10 min • Audio</span>
+                            </div>
+                            <button className="play-mini">▶</button>
+                        </div>
+
+                        <div className="rec-card" onClick={() => onNavigate('practices')}>
+                            <div className="rec-icon text">📝</div>
+                            <div className="rec-info">
+                                <h4>Diario de Gratitud</h4>
+                                <span>5 min • Escritura</span>
+                            </div>
+                            <button className="play-mini">✏️</button>
+                        </div>
+
+                        <div className="rec-card special" onClick={() => onNavigate('coach')}>
+                            <div className="rec-icon ai">✨</div>
+                            <div className="rec-info">
+                                <h4>Conversar con Coach</h4>
+                                <span>IA Personalizada</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     )
