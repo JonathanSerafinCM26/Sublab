@@ -16,8 +16,14 @@ function App() {
     const [currentPage, setCurrentPage] = useState<Page>('home')
     const [provider, setProvider] = useState<Provider>('local')
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('coach_voice')
+    const [pendingPracticeId, setPendingPracticeId] = useState<string | null>(null)
 
-    const handleNavigate = (page: Page | 'coach' | 'evolution' | 'practices') => {
+    const handleNavigate = (page: Page | 'coach' | 'evolution' | 'practices', params?: any) => {
+        if (page === 'practices' && params?.practiceId) {
+            setPendingPracticeId(params.practiceId)
+        } else {
+            setPendingPracticeId(null)
+        }
         setCurrentPage(page as Page)
     }
 
@@ -42,6 +48,7 @@ function App() {
                 return (
                     <Practices
                         onBack={() => setCurrentPage('home')}
+                        initialPracticeId={pendingPracticeId}
                         onStartPractice={(id) => {
                             console.log('Starting practice:', id)
                             // Aquí se podría navegar a la pantalla de práctica

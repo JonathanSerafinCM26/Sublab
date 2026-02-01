@@ -63,9 +63,7 @@ export const VoiceSettingsPanel: FC<VoiceSettingsPanelProps> = ({
         }
     }
 
-    const handleRecorderClose = () => {
-        setShowRecorder(false)
-    }
+
 
 
     return (
@@ -89,7 +87,7 @@ export const VoiceSettingsPanel: FC<VoiceSettingsPanelProps> = ({
                         >
                             <span className="toggle-icon">🟢</span>
                             <span className="toggle-label">Modo Privado</span>
-                            <span className="toggle-desc">Kokoro (Local)</span>
+                            <span className="toggle-desc">Local (Offline)</span>
                         </button>
 
                         <button

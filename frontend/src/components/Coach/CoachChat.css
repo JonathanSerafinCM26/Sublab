@@ -46,6 +46,8 @@
         grid-column: 2 / 3;
         grid-row: 3 / 4;
         border-radius: var(--radius-xl);
+        box-shadow: none;
+        /* Reset mobile shadow */
     }
 }
 
@@ -69,7 +71,7 @@
     background: var(--border);
     border: none;
     border-radius: var(--radius-full);
-    font-size: 1.25rem;
+    color: var(--text);
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -111,7 +113,7 @@
     justify-content: center;
     background: linear-gradient(135deg, rgba(107, 91, 149, 0.2), rgba(136, 176, 75, 0.2));
     border-radius: var(--radius-full);
-    font-size: 1.25rem;
+    color: var(--primary);
 }
 
 .analysis-content h3 {
@@ -149,7 +151,9 @@
 }
 
 .session-icon {
-    font-size: 1.5rem;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
 }
 
 .session-info {
@@ -189,6 +193,9 @@
     background: var(--priority-high);
     padding: 4px 10px;
     border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 /* Messages */
@@ -224,7 +231,7 @@
     justify-content: center;
     background: var(--ai-gradient);
     border-radius: var(--radius-full);
-    font-size: 1rem;
+    color: white;
     flex-shrink: 0;
 }
 
@@ -249,20 +256,22 @@
 .play-audio-btn {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-xs);
+    gap: var(--space-sm);
     margin-top: var(--space-sm);
-    padding: 6px 12px;
+    padding: 8px 16px;
     background: rgba(107, 91, 149, 0.1);
-    border: none;
+    border: 1px solid rgba(107, 91, 149, 0.2);
     border-radius: var(--radius-full);
     font-size: 0.85rem;
+    font-weight: 600;
     color: var(--primary);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
 }
 
 .play-audio-btn:hover {
     background: rgba(107, 91, 149, 0.2);
+    transform: translateY(-1px);
 }
 
 /* Typing indicator */
@@ -273,9 +282,9 @@
 }
 
 .typing-indicator span {
-    width: 8px;
-    height: 8px;
-    background: var(--primary-light);
+    width: 6px;
+    height: 6px;
+    background: var(--text-muted);
     border-radius: var(--radius-full);
     animation: bounce 1.4s infinite ease-in-out both;
 }
@@ -303,29 +312,32 @@
 
 /* Input */
 .chat-input-container {
+    padding: var(--space-md);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+
+.input-wrapper {
     display: flex;
     gap: var(--space-sm);
-    padding: var(--space-md) var(--space-lg);
-    background: var(--surface);
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    box-shadow: 0 -4px 16px var(--shadow-color);
+    background: var(--background);
+    padding: 8px;
+    border-radius: 30px;
+    /* Pill shape */
+    border: 1px solid var(--border);
+    align-items: center;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .chat-input {
     flex: 1;
-    padding: var(--space-md);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    font-family: inherit;
+    border: none;
+    background: transparent;
+    padding: 8px 16px;
     font-size: 1rem;
     color: var(--text);
     outline: none;
-    transition: border-color 0.2s;
-}
-
-.chat-input:focus {
-    border-color: var(--primary);
+    min-height: 24px;
 }
 
 .chat-input::placeholder {
@@ -333,18 +345,18 @@
 }
 
 .send-btn {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--primary);
     border: none;
-    border-radius: var(--radius-full);
+    border-radius: 50%;
     color: var(--text-light);
-    font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .send-btn:hover:not(:disabled) {
@@ -353,6 +365,26 @@
 }
 
 .send-btn:disabled {
-    background: var(--text-dim);
-    cursor: not-allowed;
+    background: var(--surface-elevated);
+    color: var(--text-muted);
+    cursor: default;
+}
+
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background: var(--surface-elevated);
+    color: var(--primary);
 }

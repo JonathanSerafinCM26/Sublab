@@ -1,5 +1,6 @@
 import { FC, useState, useRef, useEffect } from 'react'
 import { sendMessage, testTTS } from '../../services/api'
+import { Send, Bot, CheckCircle, Volume2, ArrowLeft, Clock, Zap, Sparkles } from 'lucide-react'
 import './CoachChat.css'
 
 interface CoachChatProps {
@@ -160,7 +161,7 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
             <div className="chat-header">
                 {onBack && (
                     <button className="back-btn" onClick={onBack}>
-                        ←
+                        <ArrowLeft size={20} />
                     </button>
                 )}
                 <div className="header-content">
@@ -172,7 +173,7 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
             {/* Analysis Card */}
             <div className="analysis-card animate-fadeIn">
                 <div className="analysis-icon">
-                    <span>🎯</span>
+                    <CheckCircle size={20} />
                 </div>
                 <div className="analysis-content">
                     <h3>Análisis Completado</h3>
@@ -189,7 +190,9 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
                             className={`session-card animate-fadeInUp stagger-${index + 1}`}
                         >
                             <div className="session-header">
-                                <span className="session-icon">🎧</span>
+                                <span className="session-icon">
+                                    <Sparkles size={24} />
+                                </span>
                                 <div className="session-info">
                                     <h4>{session.title}</h4>
                                     <span className={`priority-badge priority-${session.priority}`}>
@@ -197,7 +200,7 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
                                     </span>
                                 </div>
                                 <div className="session-duration">
-                                    <span className="duration-icon">⏱</span>
+                                    <Clock size={14} />
                                     <span>{session.duration} min</span>
                                 </div>
                             </div>
@@ -205,7 +208,7 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
                             <div className="session-footer">
                                 {session.tag && (
                                     <span className="session-tag">
-                                        ⚡ {session.tag}
+                                        <Zap size={12} fill="currentColor" /> {session.tag}
                                     </span>
                                 )}
                                 <button
@@ -228,7 +231,9 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
                         className={`message ${message.role} animate-fadeIn`}
                     >
                         {message.role === 'assistant' && (
-                            <div className="message-avatar">🤖</div>
+                            <div className="message-avatar">
+                                <Bot size={20} />
+                            </div>
                         )}
                         <div className="message-content">
                             {message.isLoading ? (
@@ -245,7 +250,7 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
                                             className="play-audio-btn"
                                             onClick={() => playAudio(message.audioUrl!)}
                                         >
-                                            🔊 Escuchar
+                                            <Volume2 size={16} /> Escuchar
                                         </button>
                                     )}
                                 </>
@@ -258,22 +263,28 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
 
             {/* Input */}
             <div className="chat-input-container">
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Escribe un mensaje..."
-                    disabled={isLoading}
-                    className="chat-input"
-                />
-                <button
-                    className="send-btn"
-                    onClick={handleSend}
-                    disabled={isLoading || !input.trim()}
-                >
-                    ▶
-                </button>
+                <div className="input-wrapper">
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        placeholder="Escribe un mensaje..."
+                        disabled={isLoading}
+                        className="chat-input"
+                    />
+                    <button
+                        className="send-btn"
+                        onClick={handleSend}
+                        disabled={isLoading || !input.trim()}
+                    >
+                        <Send size={20} fill={input.trim() ? "currentColor" : "none"} />
+                    </button>
+                </div>
+                <div className="input-actions">
+                    {/* Placeholder for mic button if needed later */}
+                    {/* <button className="icon-btn"><Mic size={20} /></button> */}
+                </div>
             </div>
 
             <audio ref={audioRef} />

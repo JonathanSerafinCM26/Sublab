@@ -1,8 +1,9 @@
 import { FC } from 'react'
+import { Play, PenLine, Sparkles, Flame, Clock, TrendingUp, ChevronRight } from 'lucide-react'
 import './HomePage.css'
 
 interface HomePageProps {
-    onNavigate: (page: 'coach' | 'evolution' | 'practices') => void
+    onNavigate: (page: 'coach' | 'evolution' | 'practices', params?: any) => void
 }
 
 export const HomePage: FC<HomePageProps> = ({ onNavigate }) => {
@@ -34,13 +35,17 @@ export const HomePage: FC<HomePageProps> = ({ onNavigate }) => {
                 {/* Hero / Daily Focus */}
                 <section className="hero-card animate-fadeInUp">
                     <div className="hero-content">
-                        <div className="focus-badge">🎯 Enfoque Diario</div>
+                        <div className="focus-badge">
+                            <Sparkles size={14} className="badge-icon" />
+                            Enfoque Diario
+                        </div>
                         <h2>Reducir Ansiedad</h2>
                         <p>Tu coach ha preparado una sesión especial para hoy.</p>
                         <button
                             className="btn btn-primary mt-md"
                             onClick={() => onNavigate('coach')}
                         >
+                            <Play size={18} fill="currentColor" />
                             Comenzar Sesión con IA
                         </button>
                     </div>
@@ -56,21 +61,27 @@ export const HomePage: FC<HomePageProps> = ({ onNavigate }) => {
                 {/* Quick Stats */}
                 <section className="stats-row animate-fadeInUp stagger-1">
                     <div className="stat-card">
-                        <div className="stat-icon">🔥</div>
+                        <div className="stat-icon flame">
+                            <Flame size={24} />
+                        </div>
                         <div className="stat-info">
                             <span className="value">12</span>
                             <span className="label">Racha (días)</span>
                         </div>
                     </div>
                     <div className="stat-card">
-                        <div className="stat-icon">⏰</div>
+                        <div className="stat-icon clock">
+                            <Clock size={24} />
+                        </div>
                         <div className="stat-info">
                             <span className="value">45m</span>
                             <span className="label">Minutos Hoy</span>
                         </div>
                     </div>
-                    <div className="stat-card">
-                        <div className="stat-icon">📈</div>
+                    <div className="stat-card" onClick={() => onNavigate('evolution')} style={{ cursor: 'pointer' }}>
+                        <div className="stat-icon trend">
+                            <TrendingUp size={24} />
+                        </div>
                         <div className="stat-info">
                             <span className="value">87%</span>
                             <span className="label">Bienestar</span>
@@ -82,30 +93,42 @@ export const HomePage: FC<HomePageProps> = ({ onNavigate }) => {
                 <section className="recommendations-row animate-fadeInUp stagger-2">
                     <div className="section-header">
                         <h3>Recomendado para ti</h3>
-                        <button className="link-btn" onClick={() => onNavigate('practices')}>Ver todo</button>
+                        <button className="link-btn" onClick={() => onNavigate('practices')}>
+                            Ver todo <ChevronRight size={16} />
+                        </button>
                     </div>
 
                     <div className="cards-scroll">
                         <div className="rec-card" onClick={() => onNavigate('practices')}>
-                            <div className="rec-icon audio">🎧</div>
+                            <div className="rec-icon audio">
+                                <span className="icon-wrapper">🎧</span>
+                            </div>
                             <div className="rec-info">
                                 <h4>Meditación Matutina</h4>
                                 <span>10 min • Audio</span>
                             </div>
-                            <button className="play-mini">▶</button>
+                            <button className="action-btn-mini">
+                                <Play size={16} fill="currentColor" />
+                            </button>
                         </div>
 
-                        <div className="rec-card" onClick={() => onNavigate('practices')}>
-                            <div className="rec-icon text">📝</div>
+                        <div className="rec-card" onClick={() => onNavigate('practices', { practiceId: '4' })}>
+                            <div className="rec-icon text">
+                                <span className="icon-wrapper">📝</span>
+                            </div>
                             <div className="rec-info">
                                 <h4>Diario de Gratitud</h4>
                                 <span>5 min • Escritura</span>
                             </div>
-                            <button className="play-mini">✏️</button>
+                            <button className="action-btn-mini">
+                                <PenLine size={16} />
+                            </button>
                         </div>
 
                         <div className="rec-card special" onClick={() => onNavigate('coach')}>
-                            <div className="rec-icon ai">✨</div>
+                            <div className="rec-icon ai">
+                                <Sparkles size={20} />
+                            </div>
                             <div className="rec-info">
                                 <h4>Conversar con Coach</h4>
                                 <span>IA Personalizada</span>
