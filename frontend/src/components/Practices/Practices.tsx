@@ -184,7 +184,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, initialPracticeId }) => 
             {/* Player/Journal Overlay */}
             {isPlaying && activePractice && (
                 <div className="player-overlay animate-fadeIn">
-                    <div className={`player-card ${activePractice.type === 'text' ? 'journal-mode' : ''}`}>
+                    <div className={`player-card ${activePractice.type === 'text' ? 'journal-mode' : ''} ${activePractice.type === 'video' ? 'video-mode' : ''}`}>
                         <button className="close-player" onClick={closePlayer}>
                             <X size={24} />
                         </button>
@@ -212,6 +212,28 @@ export const Practices: FC<PracticesProps> = ({ onBack, initialPracticeId }) => 
                                     disabled={!journalEntry.trim() || isSaving}
                                 >
                                     {isSaving ? 'Guardando...' : 'Guardar en mi Diario'}
+                                </button>
+                            </div>
+                        ) : activePractice.type === 'video' ? (
+                            <div className="video-player-container">
+                                <div className="video-placeholder">
+                                    <div className="video-overlay-controls">
+                                        <PlayCircle size={64} className="video-play-icon" />
+                                    </div>
+                                    <div className="video-progress-bar">
+                                        <div className="video-progress-fill" style={{ width: '35%' }}></div>
+                                    </div>
+                                </div>
+                                <div className="player-controls video-controls">
+                                    <button className="control-btn secondary"><Rewind size={24} /></button>
+                                    <button className="control-btn primary"><Pause size={32} fill="currentColor" /></button>
+                                    <button className="control-btn secondary"><FastForward size={24} /></button>
+                                </div>
+                                <button
+                                    className="btn btn-success complete-btn"
+                                    onClick={() => handleComplete(activePractice.id)}
+                                >
+                                    Marcar como Completado
                                 </button>
                             </div>
                         ) : (

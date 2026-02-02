@@ -17,8 +17,8 @@ const mockData = {
             id: 'anxiety',
             label: 'Ansiedad',
             icon: <Activity size={20} />,
-            before: 85,
-            after: 35,
+            before: 90,
+            after: 45, // More distinction
             change: -50,
             color: '#6B5B95'
         },
@@ -26,20 +26,26 @@ const mockData = {
             id: 'stress',
             label: 'Estrés',
             icon: <Heart size={20} />,
-            before: 90,
-            after: 25,
+            before: 85,
+            after: 30, // More distinction
             change: -65,
             color: '#88B04B'
         }
     ],
     history: [
-        { day: 'Lun', value: 30 },
-        { day: 'Mar', value: 45 },
-        { day: 'Mié', value: 25 },
-        { day: 'Jue', value: 60 },
-        { day: 'Vie', value: 40 },
-        { day: 'Sáb', value: 55 },
-        { day: 'Dom', value: 85 }
+        { day: 'Lun', value: 45 },
+        { day: 'Mar', value: 70 },
+        { day: 'Mié', value: 55 },
+        { day: 'Jue', value: 90 },
+        { day: 'Vie', value: 65 },
+        { day: 'Sáb', value: 80 },
+        { day: 'Dom', value: 100 }
+    ],
+    recentSessions: [
+        { id: 1, title: 'Meditación Matutina', date: 'Hoy, 8:30 AM', duration: '10 min', type: 'Audio' },
+        { id: 2, title: 'Diario de Gratitud', date: 'Ayer, 9:00 PM', duration: '5 min', type: 'Escritura' },
+        { id: 3, title: 'Conversación con Coach', date: 'Ayer, 6:15 PM', duration: '12 min', type: 'IA' },
+        { id: 4, title: 'Respiración Profunda', date: 'Lun, 10:00 AM', duration: '8 min', type: 'Video' },
     ]
 }
 
@@ -128,7 +134,6 @@ export const Evolution: FC<EvolutionProps> = ({ onBack }) => {
                                     className="progress-bar-fill before"
                                     style={{
                                         width: `${metric.before}%`,
-                                        backgroundColor: `${metric.color}40`
                                     }}
                                 ></div>
                             </div>
@@ -152,10 +157,26 @@ export const Evolution: FC<EvolutionProps> = ({ onBack }) => {
                 </div>
             ))}
 
+            {/* Recent Sessions List (New) */}
+            <div className="sessions-card card animate-fadeInUp stagger-3">
+                <h3 className="card-title">Historial de Sesiones</h3>
+                <div className="sessions-list">
+                    {mockData.recentSessions.map(session => (
+                        <div key={session.id} className="session-item">
+                            <div className="session-info">
+                                <span className="session-title">{session.title}</span>
+                                <span className="session-date">{session.date} • {session.type}</span>
+                            </div>
+                            <span className="session-duration">{session.duration}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             {/* Encouragement Card */}
             <div className="encouragement-card animate-fadeInUp stagger-4">
                 <div className="encouragement-icon">
-                    <Award size={24} color="white" />
+                    <Award size={24} />
                 </div>
                 <div className="encouragement-content">
                     <h4>¡Excelente progreso!</h4>
