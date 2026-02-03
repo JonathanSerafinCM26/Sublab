@@ -9,6 +9,7 @@ from .base import TTSService
 from .xtts_service import xtts_service
 
 from .fish_service import fish_service, FishAudioService
+from .tts_manager import tts_manager, TTSManager
 
 __all__ = [
     "TTSService",
@@ -16,5 +17,8 @@ __all__ = [
     # "KokoroService",   # Disabled
     "F5TTSService",
     "fish_service",
-    "FishAudioService"
+    "FishAudioService",
+    "tts_manager",
+    "TTSManager",
+    "xtts_service"
 ]

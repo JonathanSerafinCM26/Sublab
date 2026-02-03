@@ -4,11 +4,9 @@ from pydantic import BaseModel
 from typing import Optional, Literal
 import time
 import io
+import base64
 
-# from app.services.tts import kokoro_service
-# from app.services.tts import f5_service
-from app.services.tts import xtts_service
-from app.services.tts import fish_service
+from app.services.tts import tts_manager, xtts_service, fish_service
 from app.services.llm import llm_service
 
 
@@ -18,8 +16,7 @@ router = APIRouter()
 class ChatMessage(BaseModel):
     """Chat message request."""
     message: str
-    provider: Literal["local", "cloud"] = "cloud"
-    voice_id: Optional[str] = None
+    voice_id: Optional[str] = None  # Specific voice to use (optional)
     include_audio: bool = True
 
 
@@ -33,7 +30,6 @@ class ChatResponse(BaseModel):
 class TTSTestRequest(BaseModel):
     """TTS test request."""
     text: str
-    provider: Literal["local", "cloud"] = "cloud"
     voice_id: Optional[str] = None
 
 
@@ -41,15 +37,20 @@ class TTSTestRequest(BaseModel):
 async def generate_chat_response(request: ChatMessage):
     """Generate a chat response with optional TTS audio.
     
-    Pipeline: Message → LLM → Text → TTS → Audio
+    Pipeline: Message → LLM → Text → TTS (Fish first, XTTS fallback) → Audio
+    
+    The TTS provider is selected automatically:
+    1. Fish Audio (cloud) - if configured
+    2. XTTS (local) - as fallback
     """
     metrics = {
         "llm_latency_ms": 0,
         "tts_latency_ms": 0,
         "total_latency_ms": 0,
-        "provider": request.provider,
-        "cost": "$0.00" if request.provider == "local" else "~$0.001",
-        "privacy": "En Dispositivo" if request.provider == "local" else "Enviado a API"
+        "provider": "auto",
+        "provider_used": None,
+        "cost": "TBD",
+        "privacy": "TBD"
     }
     
     total_start = time.time()
@@ -71,24 +72,19 @@ async def generate_chat_response(request: ChatMessage):
         print(f"🔊 TTS: Generating audio for text ({len(coach_response)} chars)...")
         
         try:
-            if request.provider == "local":
-                if not xtts_service.is_initialized:
-                    raise RuntimeError("XTTS v2 not initialized. Espera a que cargue el modelo.")
-                audio_data = await xtts_service.generate_audio(
-                    coach_response, 
-                    request.voice_id
-                )
-            else:  # cloud
-                if not fish_service.is_configured:
-                    raise RuntimeError("Fish Audio no está configurado.")
-                audio_data = await fish_service.generate_audio(
-                    coach_response,
-                    request.voice_id
-                )
+            # Use unified TTS manager (Fish first, XTTS fallback)
+            audio_data, provider_used = await tts_manager.generate_audio(
+                coach_response, 
+                request.voice_id
+            )
             
             metrics["tts_latency_ms"] = int((time.time() - tts_start) * 1000)
+            metrics["provider_used"] = provider_used
+            metrics["cost"] = "$0.00" if provider_used == "xtts-v2" else "~$0.001"
+            metrics["privacy"] = "En Dispositivo" if provider_used == "xtts-v2" else "Enviado a API"
+            
             if audio_data:
-                print(f"✅ TTS: Audio generated! Size: {len(audio_data)} bytes, Latency: {metrics['tts_latency_ms']}ms")
+                print(f"✅ TTS: Audio generated! Size: {len(audio_data)} bytes, Provider: {provider_used}, Latency: {metrics['tts_latency_ms']}ms")
             else:
                 print("⚠️ TTS: No audio data generated.")
             
@@ -96,29 +92,27 @@ async def generate_chat_response(request: ChatMessage):
             print(f"❌ TTS error: {e}")
             import traceback
             traceback.print_exc()
-            # Return error in metrics, no audio
             audio_data = None
             metrics["tts_error"] = str(e)
     
     metrics["total_latency_ms"] = int((time.time() - total_start) * 1000)
     
-    # If audio was generated, return as multipart or base64
+    # If audio was generated, return as base64
     if audio_data:
-        import base64
         audio_b64 = base64.b64encode(audio_data).decode("utf-8")
         print(f"📤 Sending response with audio (base64 length: {len(audio_b64)})")
         return {
             "text": coach_response,
             "audio": audio_b64,
             "audio_format": "wav",
-            "provider": request.provider,
+            "provider": metrics["provider_used"],
             "metrics": metrics
         }
     
     print(f"📤 Sending response WITHOUT audio (TTS failed or not requested)")
     return ChatResponse(
         text=coach_response,
-        provider=request.provider,
+        provider="none",
         metrics=metrics
     )
 
@@ -127,31 +121,16 @@ async def generate_chat_response(request: ChatMessage):
 async def test_tts(request: TTSTestRequest):
     """Test TTS generation directly (without LLM).
     
+    Uses unified TTS manager (Fish first, XTTS fallback).
     Returns audio file for the given text.
     """
     start_time = time.time()
     
     try:
-        if request.provider == "local":
-            if not xtts_service.is_initialized:
-                raise HTTPException(
-                    status_code=503, 
-                    detail="XTTS v2 not initialized. Model files may be downloading."
-                )
-            audio_data = await xtts_service.generate_audio(
-                request.text, 
-                request.voice_id
-            )
-        else:  # cloud
-            if not fish_service.is_configured:
-                raise HTTPException(
-                    status_code=503, 
-                    detail="Fish Audio API key not configured"
-                )
-            audio_data = await fish_service.generate_audio(
-                request.text,
-                request.voice_id
-            )
+        audio_data, provider_used = await tts_manager.generate_audio(
+            request.text, 
+            request.voice_id
+        )
         
         latency_ms = int((time.time() - start_time) * 1000)
         
@@ -159,9 +138,9 @@ async def test_tts(request: TTSTestRequest):
             content=audio_data,
             media_type="audio/wav",
             headers={
-                "X-TTS-Provider": request.provider,
+                "X-TTS-Provider": provider_used,
                 "X-TTS-Latency-Ms": str(latency_ms),
-                "X-TTS-Cost": "$0.00" if request.provider == "local" else "~$0.001"
+                "X-TTS-Cost": "$0.00" if provider_used == "xtts-v2" else "~$0.001"
             }
         )
         
@@ -173,41 +152,20 @@ async def test_tts(request: TTSTestRequest):
 async def compare_tts(text: str, voice_id: Optional[str] = None):
     """Compare TTS output from both providers.
     
-    Generates audio from both Local and Cloud providers for comparison.
+    Generates audio from both Fish Audio and XTTS for comparison.
     """
     results = {
         "text": text,
-        "local": {"status": "pending", "latency_ms": 0},
-        "cloud": {"status": "pending", "latency_ms": 0}
+        "fish": {"status": "pending", "latency_ms": 0},
+        "xtts": {"status": "pending", "latency_ms": 0}
     }
     
-    import base64
-    
-    # Generate Local (XTTS v2)
-    if xtts_service.is_initialized:
-        try:
-            t0 = time.time()
-            local_audio = await xtts_service.generate_audio(text, voice_id)
-            t1 = time.time()
-            results["local"] = {
-                "provider": "xtts-v2",
-                "time": f"{t1-t0:.2f}s",
-                "audio_size": len(local_audio) if local_audio else 0,
-                "audio": base64.b64encode(local_audio).decode("utf-8"),
-                "cost": "$0.00",
-                "privacy": "En Dispositivo"
-            }
-        except Exception as e:
-            results["local"] = {"error": str(e)}
-    else:
-        results["local"] = {"error": "XTTS Not initialized"}
-    
-    # Generate with Cloud (Fish Audio)
+    # Generate with Fish Audio
     if fish_service.is_configured:
         try:
             start = time.time()
             audio = await fish_service.generate_audio(text, voice_id)
-            results["cloud"] = {
+            results["fish"] = {
                 "status": "success",
                 "latency_ms": int((time.time() - start) * 1000),
                 "audio": base64.b64encode(audio).decode("utf-8"),
@@ -215,8 +173,33 @@ async def compare_tts(text: str, voice_id: Optional[str] = None):
                 "privacy": "Enviado a API"
             }
         except Exception as e:
-            results["cloud"] = {"status": "error", "error": str(e)}
+            results["fish"] = {"status": "error", "error": str(e)}
     else:
-        results["cloud"]["status"] = "not_configured"
+        results["fish"]["status"] = "not_configured"
+    
+    # Generate with XTTS
+    if xtts_service.is_initialized:
+        try:
+            t0 = time.time()
+            local_audio = await xtts_service.generate_audio(text, voice_id)
+            t1 = time.time()
+            results["xtts"] = {
+                "provider": "xtts-v2",
+                "time": f"{t1-t0:.2f}s",
+                "audio_size": len(local_audio) if local_audio else 0,
+                "audio": base64.b64encode(local_audio).decode("utf-8") if local_audio else None,
+                "cost": "$0.00",
+                "privacy": "En Dispositivo"
+            }
+        except Exception as e:
+            results["xtts"] = {"error": str(e)}
+    else:
+        results["xtts"] = {"error": "XTTS Not initialized"}
     
     return results
+
+
+@router.get("/tts-status")
+async def get_tts_status():
+    """Get TTS manager status and available providers."""
+    return tts_manager.get_status()

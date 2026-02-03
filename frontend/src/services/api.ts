@@ -18,9 +18,10 @@ export interface ChatResponse {
         llm_latency_ms: number
         tts_latency_ms: number
         total_latency_ms: number
-        provider: string
+        provider_used?: string
         cost: string
         privacy: string
+        tts_error?: string
     }
 }
 
@@ -32,55 +33,91 @@ export interface TTSResponse {
 }
 
 export interface VoiceCloneResponse {
-    local: {
+    voice_name: string
+    fish: {
         status: string
-        message?: string
-        metadata?: {
-            voice_id: string
-            reference_audio: string
-        }
-        processing_time?: number
+        voice_id?: string
+        error?: string
     }
-    cloud_id?: string
-    cloud_status: string
-    processing_time_cloud?: number
+    xtts: {
+        status: string
+        metadata?: any
+        error?: string
+    }
+    default_voice_id?: string
+    processing_time?: number
+}
+
+export interface VoiceInfo {
+    id: string
+    name: string
+    provider: string
+    lang?: string
+    gender?: string
+    custom?: boolean
+}
+
+export interface VoiceListResponse {
+    voices: {
+        fish: VoiceInfo[]
+        xtts: VoiceInfo[]
+        default_voice_id?: string
+    }
+    default_voice_id?: string
+    providers: {
+        fish_audio: {
+            configured: boolean
+            is_primary: boolean
+        }
+        xtts: {
+            initialized: boolean
+            is_fallback: boolean
+        }
+    }
 }
 
 export interface VoiceStatus {
+    tts_manager: {
+        fish_audio: {
+            configured: boolean
+            is_default: boolean
+        }
+        xtts: {
+            initialized: boolean
+            is_fallback: boolean
+        }
+        default_voice_id?: string
+        last_provider_used?: string
+    }
     local: {
         provider: string
         initialized: boolean
-        is_local: boolean
+        is_fallback: boolean
         cost: string
         privacy: string
-        voices?: Array<{
-            id: string
-            name: string
-            lang: string
-            gender: string
-            custom: boolean
-        }>
+        supports_cloning: boolean
+        voices?: VoiceInfo[]
     }
     cloud: {
         provider: string
         configured: boolean
-        is_local: boolean
+        is_primary: boolean
         cost: string
         privacy: string
+        supports_cloning: boolean
     }
 }
 
 /**
- * Send a chat message and get response with optional TTS audio
+ * Send a chat message and get response with optional TTS audio.
+ * TTS provider is auto-selected (Fish first, XTTS fallback).
  */
 export async function sendMessage(
     message: string,
-    provider: 'local' | 'cloud' = 'cloud',
     voiceId?: string
 ): Promise<ChatResponse> {
     const response = await api.post('/api/chat/generate', {
         message,
-        provider,
         voice_id: voiceId,
         include_audio: true,
     })
@@ -88,16 +125,15 @@ export async function sendMessage(
 }
 
 /**
- * Test TTS directly without LLM
+ * Test TTS directly without LLM.
+ * Provider is auto-selected.
  */
 export async function testTTS(
     text: string,
-    provider: 'local' | 'cloud' = 'cloud',
     voiceId?: string
 ): Promise<Blob> {
     const response = await api.post('/api/chat/test-tts', {
         text,
-        provider,
         voice_id: voiceId,
     }, {
         responseType: 'blob',
@@ -106,11 +142,12 @@ export async function testTTS(
 }
 
 /**
- * Clone a voice from audio recording
+ * Clone a voice from audio recording.
+ * Clones on both Fish Audio (primary) and XTTS (backup).
  */
 export async function cloneVoice(
     audioBlob: Blob,
-    voiceName: string = 'coach'
+    voiceName: string = 'coach_voice'
 ): Promise<VoiceCloneResponse> {
     const formData = new FormData()
     formData.append('audio', audioBlob, `${voiceName}.webm`)
@@ -121,6 +158,36 @@ export async function cloneVoice(
             'Content-Type': 'multipart/form-data',
         },
     })
+    return response.data
+}
+
+/**
+ * Get list of available voices from all providers.
+ */
+export async function getVoices(): Promise<VoiceListResponse> {
+    const response = await api.get('/api/voice/voices')
+    return response.data
+}
+
+/**
+ * Set the default voice for TTS generation.
+ */
+export async function setDefaultVoice(voiceId: string): Promise<{
+    success: boolean
+    default_voice_id: string
+    message: string
+}> {
+    const response = await api.post('/api/voice/set-default', {
+        voice_id: voiceId,
+    })
+    return response.data
+}
+
+/**
+ * Get the current default voice ID.
+ */
+export async function getDefaultVoice(): Promise<{ default_voice_id?: string }> {
+    const response = await api.get('/api/voice/default')
     return response.data
 }
 
@@ -138,6 +205,38 @@ export async function getVoiceStatus(): Promise<VoiceStatus> {
 export async function compareTTS(text: string) {
     const response = await api.post('/api/chat/compare', null, {
         params: { text },
+    })
+    return response.data
+}
+
+// ============================================
+// API Key Management
+// ============================================
+
+export interface ApiKeyStatus {
+    configured: boolean
+    key_length: number
+    key_preview?: string
+}
+
+/**
+ * Get Fish Audio API key status (without revealing the full key)
+ */
+export async function getApiKeyStatus(): Promise<ApiKeyStatus> {
+    const response = await api.get('/api/voice/api-key/status')
+    return response.data
+}
+
+/**
+ * Set Fish Audio API key
+ */
+export async function setApiKey(apiKey: string): Promise<{
+    success: boolean
+    message: string
+    status: ApiKeyStatus
+}> {
+    const response = await api.post('/api/voice/api-key', {
+        api_key: apiKey,
     })
     return response.data
 }

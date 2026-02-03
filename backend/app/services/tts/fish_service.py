@@ -1,5 +1,7 @@
 import io
 import os
+import json
+from pathlib import Path
 from typing import AsyncGenerator, Optional
 import httpx
 
@@ -11,11 +13,61 @@ class FishAudioService(TTSService):
     """Cloud TTS service using Fish Audio API."""
     
     BASE_URL = "https://api.fish.audio/v1"
+    CONFIG_FILE = Path(settings.voices_path) / "fish_config.json"
     
     def __init__(self):
         self._api_key = settings.fish_audio_api_key
         self._default_voice = None  # Will be set after cloning
         self._cloned_voices: dict[str, str] = {}  # name -> reference_id
+        # Try to load API key from config file (overrides env)
+        self._load_config()
+    
+    def _load_config(self):
+        """Load configuration from file."""
+        if self.CONFIG_FILE.exists():
+            try:
+                with open(self.CONFIG_FILE) as f:
+                    config = json.load(f)
+                
+                # Load API Key
+                if config.get("api_key"):
+                    self._api_key = config["api_key"]
+                
+                # Load Cloned Voices
+                if config.get("cloned_voices"):
+                    self._cloned_voices = config["cloned_voices"]
+                    
+                print(f"🐟 Fish Audio: Loaded config (Key: {'Yes' if self._api_key else 'No'}, Voices: {len(self._cloned_voices)})")
+            except Exception as e:
+                print(f"⚠️ Failed to load Fish config: {e}")
+    
+    def _save_config(self):
+        """Save configuration to file."""
+        try:
+            self.CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+            config = {
+                "api_key": self._api_key,
+                "cloned_voices": self._cloned_voices
+            }
+            with open(self.CONFIG_FILE, "w") as f:
+                json.dump(config, f, indent=2)
+            print(f"💾 Fish Audio: Config saved")
+        except Exception as e:
+            print(f"⚠️ Failed to save Fish config: {e}")
+    
+    def set_api_key(self, api_key: str):
+        """Set the API key at runtime and persist it."""
+        self._api_key = api_key
+        self._save_config()
+        print(f"🔑 Fish Audio: API key updated ({len(api_key)} chars)")
+    
+    def get_api_key_status(self) -> dict:
+        """Get API key status (without revealing the key)."""
+        return {
+            "configured": bool(self._api_key),
+            "key_length": len(self._api_key) if self._api_key else 0,
+            "key_preview": f"{self._api_key[:8]}..." if self._api_key and len(self._api_key) > 8 else None
+        }
     
     @property
     def provider_name(self) -> str:
@@ -35,6 +87,32 @@ class FishAudioService(TTSService):
             "Content-Type": "application/json"
         }
     
+    async def ensure_default_voice(self):
+        """Ensure a default voice exists by cloning the local reference if needed."""
+        if self._default_voice:
+            return
+
+        # Check if we have a mapped voice that should be default
+        if self._cloned_voices:
+            # Use the first one as default
+            self._default_voice = list(self._cloned_voices.values())[0]
+            return
+
+        # Try to clone from local file
+        default_wav_path = Path(settings.voices_path) / "coach_voice_fish.wav"
+        if default_wav_path.exists():
+            print(f"🐟 Auto-cloning default voice from {default_wav_path.name}...")
+            try:
+                with open(default_wav_path, "rb") as f:
+                    audio_data = f.read()
+                
+                # Clone it
+                ref_id = await self.clone_voice(audio_data, "coach_voice")
+                self._default_voice = ref_id
+                print(f"✅ Auto-cloned default voice: {ref_id}")
+            except Exception as e:
+                print(f"⚠️ Failed to auto-clone default voice: {e}")
+
     async def generate_audio(
         self, 
         text: str, 
@@ -44,16 +122,23 @@ class FishAudioService(TTSService):
         if not self.is_configured:
             raise RuntimeError("Fish Audio API key not configured")
         
+        # Ensure we have a voice ID
+        target_voice_id = voice_id or self._default_voice
+        
+        if not target_voice_id:
+            await self.ensure_default_voice()
+            target_voice_id = self._default_voice
+            
+        if not target_voice_id:
+            raise RuntimeError("No voice ID provided and no default voice available")
+        
         async with httpx.AsyncClient(timeout=60.0) as client:
             payload = {
                 "text": text,
                 "format": "wav",
-                "latency": "normal"  # Can be: balanced, normal, high_quality
+                "latency": "normal",
+                "reference_id": target_voice_id
             }
-            
-            # Use reference_id if provided
-            if voice_id:
-                payload["reference_id"] = voice_id
             
             response = await client.post(
                 f"{self.BASE_URL}/tts",
@@ -75,15 +160,23 @@ class FishAudioService(TTSService):
         if not self.is_configured:
             raise RuntimeError("Fish Audio API key not configured")
         
+        # Ensure we have a voice ID
+        target_voice_id = voice_id or self._default_voice
+        
+        if not target_voice_id:
+            await self.ensure_default_voice()
+            target_voice_id = self._default_voice
+            
+        if not target_voice_id:
+            raise RuntimeError("No voice ID provided and no default voice available")
+        
         async with httpx.AsyncClient(timeout=60.0) as client:
             payload = {
                 "text": text,
                 "format": "wav",
-                "latency": "balanced"  # Use balanced for streaming
+                "latency": "balanced",  # Use balanced for streaming
+                "reference_id": target_voice_id
             }
-            
-            if voice_id:
-                payload["reference_id"] = voice_id
             
             async with client.stream(
                 "POST",

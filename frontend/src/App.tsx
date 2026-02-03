@@ -10,11 +10,9 @@ import './App.css'
 import './components/Navigation/Sidebar.css'
 
 type Page = 'home' | 'coach' | 'evolution' | 'practices' | 'settings'
-type Provider = 'local' | 'cloud'
 
 function App() {
     const [currentPage, setCurrentPage] = useState<Page>('home')
-    const [provider, setProvider] = useState<Provider>('local')
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('coach_voice')
     const [pendingPracticeId, setPendingPracticeId] = useState<string | null>(null)
 
@@ -36,7 +34,6 @@ function App() {
                 return (
                     <CoachChat
                         onBack={() => setCurrentPage('home')}
-                        provider={provider}
                         voiceId={selectedVoiceId}
                     />
                 )
@@ -51,7 +48,6 @@ function App() {
                         initialPracticeId={pendingPracticeId}
                         onStartPractice={(id) => {
                             console.log('Starting practice:', id)
-                            // Aquí se podría navegar a la pantalla de práctica
                         }}
                     />
                 )
@@ -60,8 +56,6 @@ function App() {
                 return (
                     <div className="settings-page">
                         <VoiceSettingsPanel
-                            provider={provider}
-                            onProviderChange={setProvider}
                             selectedVoiceId={selectedVoiceId}
                             onVoiceSelect={setSelectedVoiceId}
                             onClose={() => setCurrentPage('home')}

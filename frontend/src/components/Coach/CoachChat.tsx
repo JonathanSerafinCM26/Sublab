@@ -5,7 +5,6 @@ import './CoachChat.css'
 
 interface CoachChatProps {
     onBack?: () => void
-    provider?: 'local' | 'cloud'
     voiceId?: string
 }
 
@@ -37,7 +36,7 @@ const recommendedSessions = [
     }
 ]
 
-export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voiceId }) => {
+export const CoachChat: FC<CoachChatProps> = ({ onBack, voiceId }) => {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
@@ -79,7 +78,7 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
         }])
 
         try {
-            const response = await sendMessage(input, provider, voiceId)
+            const response = await sendMessage(input, voiceId)
             console.log('📥 Response received:', {
                 text: response.text?.substring(0, 50) + '...',
                 hasAudio: !!response.audio,
@@ -147,7 +146,7 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, provider = 'local', voic
 
         // Generate TTS for the session intro
         try {
-            const audioBlob = await testTTS(systemMessage.content, provider, voiceId)
+            const audioBlob = await testTTS(systemMessage.content, voiceId)
             const audioUrl = URL.createObjectURL(audioBlob)
             playAudio(audioUrl)
         } catch (e) {
