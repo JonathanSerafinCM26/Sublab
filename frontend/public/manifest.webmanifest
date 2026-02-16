@@ -1,0 +1,17 @@
+{
+  "name": "SubLab",
+  "short_name": "SubLab",
+  "description": "SubLab - Laboratorio de Voz para Coach Digital",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#9da0ca",
+  "theme_color": "#163b88",
+  "icons": [
+    {
+      "src": "/sublab-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

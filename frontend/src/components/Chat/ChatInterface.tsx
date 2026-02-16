@@ -1,5 +1,6 @@
 import { FC, useState, useRef, useEffect } from 'react'
 import { sendMessage, ChatResponse } from '../../services/api'
+import sublabLogo from '../../assets/sublab-logo.svg'
 import './ChatInterface.css'
 
 type Provider = 'local' | 'cloud'
@@ -119,7 +120,9 @@ export const ChatInterface: FC<ChatInterfaceProps> = ({ provider }) => {
                         className={`message ${message.role} animate-fadeIn`}
                     >
                         <div className="message-avatar">
-                            {message.role === 'user' ? '👤' : '🤖'}
+                            {message.role === 'user'
+                                ? '👤'
+                                : <img src={sublabLogo} alt="SubLab Coach" className="message-avatar-logo" />}
                         </div>
                         <div className="message-content">
                             <div className="message-text">{message.content}</div>
@@ -152,7 +155,9 @@ export const ChatInterface: FC<ChatInterfaceProps> = ({ provider }) => {
 
                 {isLoading && (
                     <div className="message assistant animate-fadeIn">
-                        <div className="message-avatar">🤖</div>
+                        <div className="message-avatar">
+                            <img src={sublabLogo} alt="SubLab Coach" className="message-avatar-logo" />
+                        </div>
                         <div className="message-content">
                             <div className="typing-indicator">
                                 <span></span>

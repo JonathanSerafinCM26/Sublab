@@ -2,51 +2,43 @@
 @import './responsive.css';
 
 :root {
-  /* SubLab Brand Colors - Lavender/Purple Theme */
-  --primary: #6B5B95;
-  --primary-dark: #574B7A;
-  --primary-light: #9B8DC4;
+  --primary: #163B88;
+  --primary-dark: #102d67;
+  --primary-light: #9da0ca;
 
   --accent: #88B04B;
-  /* Green for progress */
-  --accent-light: #A8D06A;
+  --accent-light: #FFC857;
 
-  /* Backgrounds */
-  --background: #E8E4F0;
-  /* Lavender light */
-  --background-gradient: linear-gradient(135deg, #E8E4F0 0%, #D4CCE8 100%);
-  --surface: #F5F0FA;
-  /* Card background */
-  --surface-elevated: #FFFFFF;
+  --background: #9da0ca;
+  --background-gradient: linear-gradient(180deg, #9da0ca 0%, #9da0ca 100%);
+  --surface: #e5d8f2;
+  --surface-elevated: #f2ebfa;
+  --surface-alt: #c1d4de;
 
-  /* Text */
-  --text: #3D3D5C;
-  /* Dark purple-gray */
-  --text-muted: #6B6B8A;
-  --text-dim: #9494B0;
+  --text: #163B88;
+  --text-muted: #294b98;
+  --text-dim: #5c72a8;
   --text-light: #FFFFFF;
 
-  /* Borders & Shadows */
-  --border: rgba(107, 91, 149, 0.15);
-  --shadow-color: rgba(107, 91, 149, 0.15);
+  --border: rgba(22, 59, 136, 0.18);
+  --shadow-color: rgba(22, 59, 136, 0.14);
 
   /* Status Colors */
   --success: #88B04B;
   --success-bg: rgba(136, 176, 75, 0.15);
-  --warning: #F7CAC9;
-  /* Salmon pink */
-  --warning-dark: #E8A8A7;
+  --warning: #FFC857;
+  --warning-dark: #efb83a;
   --error: #E07A7A;
   --info: #7BA5D4;
 
   /* Priority Colors */
-  --priority-high: #F7CAC9;
-  --priority-high-text: #C45C5C;
+  --priority-high: #f3b7b7;
+  --priority-high-text: #8f2f2f;
   --priority-medium: #FFE4B5;
-  --priority-medium-text: #B8860B;
+  --priority-medium-text: #8d6709;
 
   /* Coach AI */
-  --ai-gradient: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%);
+  --ai-gradient: linear-gradient(135deg, #e5d8f2 0%, #c1d4de 100%);
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -67,7 +59,7 @@
   --shadow-sm: 0 2px 8px var(--shadow-color);
   --shadow-md: 0 4px 16px var(--shadow-color);
   --shadow-lg: 0 8px 32px var(--shadow-color);
-  --shadow-glow: 0 0 40px rgba(107, 91, 149, 0.25);
+  --shadow-glow: 0 0 40px rgba(22, 59, 136, 0.2);
 }
 
 * {
@@ -82,7 +74,7 @@ html {
 
 body {
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--background-gradient);
+  background: var(--background);
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
@@ -155,13 +147,13 @@ h4 {
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: var(--accent);
   color: var(--text-light);
   box-shadow: var(--shadow-md);
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
+  background: var(--accent-light);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
@@ -188,6 +180,7 @@ h4 {
 
 .btn-accent:hover {
   background: var(--accent-light);
+  color: var(--text);
 }
 
 .btn-ghost {

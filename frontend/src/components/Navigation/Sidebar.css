@@ -32,12 +32,14 @@
     }
 
     .logo-icon {
-        font-size: 1.5rem;
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
     }
 
     .logo-container h1 {
         font-size: 1.5rem;
-        color: var(--primary);
+        color: var(--text);
         font-weight: 700;
         margin: 0;
     }
@@ -67,13 +69,13 @@
     }
 
     .sidebar-item:hover {
-        background: rgba(107, 91, 149, 0.05);
-        color: var(--primary);
+        background: var(--surface-elevated);
+        color: var(--text);
     }
 
     .sidebar-item.active {
         background: var(--surface-elevated);
-        color: var(--primary);
+        color: var(--text);
         box-shadow: var(--shadow-sm);
         font-weight: 600;
     }
@@ -85,7 +87,7 @@
         transform: translateY(-50%);
         width: 4px;
         height: 20px;
-        background: var(--primary);
+        background: var(--text);
         border-radius: 4px 0 0 4px;
     }
 

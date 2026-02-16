@@ -40,10 +40,17 @@
     justify-content: center;
     font-size: 1.25rem;
     flex-shrink: 0;
+    overflow: hidden;
+}
+
+.message-avatar-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .message.user .message-avatar {
-    background: var(--primary);
+    background: var(--surface);
 }
 
 .message-content {
@@ -60,12 +67,14 @@
 }
 
 .message.user .message-text {
-    background: var(--primary);
-    color: white;
+    background: var(--surface);
+    color: var(--text);
     border-bottom-right-radius: var(--radius-sm);
 }
 
 .message.assistant .message-text {
+    background: var(--surface-alt);
+    color: var(--text);
     border-bottom-left-radius: var(--radius-sm);
 }
 

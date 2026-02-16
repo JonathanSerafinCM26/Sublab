@@ -203,12 +203,13 @@
 }
 
 .practice-action-btn.start {
-    background: var(--primary);
+    background: var(--accent);
     color: white;
 }
 
 .practice-action-btn.start:hover {
-    background: var(--primary-dark);
+    background: var(--accent-light);
+    color: var(--text);
     transform: scale(1.1);
 }
 
@@ -218,8 +219,8 @@
 }
 
 .practice-action-btn.replay:hover {
-    background: var(--primary-light);
-    color: white;
+    background: var(--surface-alt);
+    color: var(--text);
 }
 
 /* Motivation Card */

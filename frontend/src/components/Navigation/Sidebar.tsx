@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import sublabLogo from '../../assets/sublab-logo.svg'
 import './BottomNav.css' // Reuse some styles or create new ones
 
 interface SidebarProps {
@@ -20,7 +21,7 @@ export const Sidebar: FC<SidebarProps> = ({ currentPage, onNavigate }) => {
         <aside className="desktop-sidebar">
             <div className="sidebar-header">
                 <div className="logo-container">
-                    <span className="logo-icon">💎</span>
+                    <img className="logo-icon" src={sublabLogo} alt="SubLab" />
                     <h1>SubLab</h1>
                 </div>
             </div>
