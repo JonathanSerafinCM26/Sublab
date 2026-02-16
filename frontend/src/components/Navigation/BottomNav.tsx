@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import sublabLogo from '../../assets/sublab-logo.svg'
+import sublabMark from '../../assets/sublab-mark.svg'
 import './BottomNav.css'
 
 type Page = 'home' | 'coach' | 'evolution' | 'practices' | 'settings'
@@ -28,7 +28,7 @@ export const BottomNav: FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
                 >
                     <span className="nav-icon">
                         {item.icon === 'logo'
-                            ? <img src={sublabLogo} alt="SubLab" className="nav-icon-img" />
+                            ? <img src={sublabMark} alt="SubLab" className="nav-icon-img nav-icon-mark" />
                             : item.icon}
                     </span>
                     <span className="nav-label">{item.label}</span>
