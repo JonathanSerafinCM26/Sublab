@@ -67,7 +67,10 @@ export const ChatInterface: FC<ChatInterfaceProps> = ({ provider }) => {
                 role: 'assistant',
                 content: response.text,
                 timestamp: new Date(),
-                metrics: response.metrics,
+                metrics: response.metrics ? {
+                    ...response.metrics,
+                    provider: response.metrics.provider_used || response.provider || 'unknown'
+                } : undefined,
                 audioData: response.audio,
             }
 

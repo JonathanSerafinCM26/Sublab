@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { Play, PenLine, Sparkles, Flame, Clock, TrendingUp, ChevronRight, Headphones, BookOpenText } from 'lucide-react'
+import { Play, PenLine, Sparkles, Flame, Clock, TrendingUp, ChevronRight, Headphones, BookOpenText, Smile, Meh, Frown } from 'lucide-react'
 import './HomePage.css'
 
 interface HomePageProps {
@@ -22,9 +22,9 @@ export const HomePage: FC<HomePageProps> = ({ onNavigate }) => {
                 <div className="user-mood">
                     <span>¿Cómo te sientes hoy?</span>
                     <div className="mood-selector">
-                        <button className="mood-btn" title="Bien">😊</button>
-                        <button className="mood-btn" title="Regular">😐</button>
-                        <button className="mood-btn" title="Mal">😔</button>
+                        <button className="mood-btn" title="Bien"><Smile size={24} /></button>
+                        <button className="mood-btn" title="Regular"><Meh size={24} /></button>
+                        <button className="mood-btn" title="Mal"><Frown size={24} /></button>
                     </div>
                 </div>
             </header>

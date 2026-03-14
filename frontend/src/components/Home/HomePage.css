@@ -470,3 +470,6 @@
         grid-template-columns: 1fr;
     }
 }
+.mood-selector .mood-btn:nth-child(1) { color: var(--accent); }
+.mood-selector .mood-btn:nth-child(2) { color: #f59e0b; }
+.mood-selector .mood-btn:nth-child(3) { color: #ef4444; }

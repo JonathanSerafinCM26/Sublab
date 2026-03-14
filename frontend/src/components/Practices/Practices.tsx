@@ -243,6 +243,7 @@ const loadProgress = (): CurriculumProgress => {
 
 export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initialPracticeId }) => {
     const [activeModuleId, setActiveModuleId] = useState<string | null>(null)
+    const [modalStep, setModalStep] = useState<number>(1)
     const [progress, setProgress] = useState<CurriculumProgress>(loadProgress)
     const [draftNote, setDraftNote] = useState('')
 
@@ -309,6 +310,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
 
     const openModule = (moduleId: string) => {
         setActiveModuleId(moduleId)
+        setModalStep(1)
         onStartPractice?.(moduleId)
     }
 
@@ -435,82 +437,155 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                             </div>
                         </div>
 
-                        <div className="module-sections">
-                            <section>
-                                <h3><PenTool size={16} /> Contenido</h3>
-                                <ul>
-                                    {activeModule.textContent.map((item, index) => (
-                                        <li key={`text-${index}`}>{item}</li>
-                                    ))}
-                                </ul>
-                            </section>
+                        <div className="module-sections wizard-sections">
+                            {/* Step indicators */}
+                            <div className="wizard-progress">
+                                <div className={`wizard-step ${modalStep >= 1 ? 'active' : ''}`} onClick={() => setModalStep(1)}>
+                                    <div className="step-circle">1</div>
+                                    <span>Teoría</span>
+                                </div>
+                                <div className="step-line"></div>
+                                <div className={`wizard-step ${modalStep >= 2 ? 'active' : ''}`} onClick={() => setModalStep(2)}>
+                                    <div className="step-circle">2</div>
+                                    <span>Práctica</span>
+                                </div>
+                                <div className="step-line"></div>
+                                <div className={`wizard-step ${modalStep >= 3 ? 'active' : ''}`} onClick={() => setModalStep(3)}>
+                                    <div className="step-circle">3</div>
+                                    <span>Reflexión</span>
+                                </div>
+                            </div>
 
-                            {activeModule.video && (
-                                <section>
-                                    <h3><PlayCircle size={16} /> Video</h3>
-                                    <p>{activeModule.video}</p>
-                                </section>
-                            )}
+                            <div className="wizard-body">
+                                {modalStep === 1 && (
+                                    <div className="wizard-step-content animate-fadeIn">
+                                        <section>
+                                            <h3><PenTool size={16} /> Contenido</h3>
+                                            <ul>
+                                                {activeModule.textContent.map((item, index) => (
+                                                    <li key={`text-${index}`}>{item}</li>
+                                                ))}
+                                            </ul>
+                                        </section>
 
-                            <section>
-                                <h3><Target size={16} /> Práctica</h3>
-                                <ul>
-                                    {activeModule.practice.map((item, index) => (
-                                        <li key={`practice-${index}`}>{item}</li>
-                                    ))}
-                                </ul>
-                            </section>
+                                        {activeModule.video && (
+                                            <section className="video-section">
+                                                <h3><PlayCircle size={16} /> Video</h3>
+                                                <div className="video-placeholder">
+                                                    <Target size={30} className="icon-pulse" />
+                                                    <p>{activeModule.video}</p>
+                                                </div>
+                                            </section>
+                                        )}
+                                    </div>
+                                )}
 
-                            {activeModule.audios.length > 0 && (
-                                <section>
-                                    <h3><Headphones size={16} /> Audios</h3>
-                                    <ul>
-                                        {activeModule.audios.map((item, index) => (
-                                            <li key={`audio-${index}`}>{item}</li>
-                                        ))}
-                                    </ul>
-                                </section>
-                            )}
+                                {modalStep === 2 && (
+                                    <div className="wizard-step-content animate-fadeIn">
+                                        <section>
+                                            <h3><Target size={16} /> Práctica</h3>
+                                            <ul className="practice-checklist">
+                                                {activeModule.practice.map((item, index) => (
+                                                    <li key={`practice-${index}`}>
+                                                        <Check size={16} className="text-accent" />
+                                                        <span>{item}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </section>
 
-                            {activeModule.resources.length > 0 && (
-                                <section>
-                                    <h3><BookOpen size={16} /> Recursos</h3>
-                                    <ul>
-                                        {activeModule.resources.map((item, index) => (
-                                            <li key={`resource-${index}`}>{item}</li>
-                                        ))}
-                                    </ul>
-                                </section>
-                            )}
+                                        {activeModule.audios.length > 0 && (
+                                            <section>
+                                                <h3><Headphones size={16} /> Audios</h3>
+                                                <ul className="audio-list">
+                                                    {activeModule.audios.map((item, index) => (
+                                                        <li key={`audio-${index}`}>
+                                                            <PlayCircle size={16} />
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </section>
+                                        )}
 
-                            <section>
-                                <h3><PenTool size={16} /> Mi nota de práctica</h3>
-                                <textarea
-                                    className="journal-input"
-                                    placeholder="Escribe aquí lo primero que te venga a la cabeza..."
-                                    value={draftNote}
-                                    onChange={(event) => setDraftNote(event.target.value)}
-                                />
-                                <button className="btn btn-primary save-btn" onClick={saveNote}>
-                                    Guardar nota
+                                        {activeModule.resources.length > 0 && (
+                                            <section>
+                                                <h3><BookOpen size={16} /> Recursos</h3>
+                                                <ul className="resource-list">
+                                                    {activeModule.resources.map((item, index) => (
+                                                        <li key={`resource-${index}`}>
+                                                            <BookOpen size={16} />
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </section>
+                                        )}
+                                    </div>
+                                )}
+
+                                {modalStep === 3 && (
+                                    <div className="wizard-step-content animate-fadeIn">
+                                        <section>
+                                            <h3><PenTool size={16} /> Mi nota de práctica</h3>
+                                            <p className="text-muted text-sm mb-2">Reflexiona y registra tu progreso. ¿Qué descubriste hoy?</p>
+                                            <textarea
+                                                className="journal-input enhanced-input"
+                                                placeholder="Escribe aquí lo primero que te venga a la cabeza..."
+                                                value={draftNote}
+                                                onChange={(event) => setDraftNote(event.target.value)}
+                                            />
+                                            <button className="btn btn-primary save-btn" onClick={saveNote}>
+                                                Guardar nota
+                                            </button>
+                                        </section>
+                                        
+                                        <div className="completion-card">
+                                            <h4>¿Has terminado esta práctica?</h4>
+                                            <button
+                                                className={`btn ${isCompleted(activeModule.id) ? 'btn-secondary' : 'btn-accent'} complete-btn`}
+                                                onClick={() => toggleCompleted(activeModule.id)}
+                                            >
+                                                {isCompleted(activeModule.id) ? (
+                                                    <>
+                                                        <Circle size={16} /> Marcar como pendiente
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <CircleCheck size={16} /> Marcar módulo como completado
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="wizard-footer">
+                                <button 
+                                    className="btn btn-secondary" 
+                                    disabled={modalStep === 1} 
+                                    onClick={() => setModalStep(prev => prev - 1)}
+                                >
+                                    Anterior
                                 </button>
-                            </section>
+                                {modalStep < 3 ? (
+                                    <button 
+                                        className="btn btn-primary" 
+                                        onClick={() => setModalStep(prev => prev + 1)}
+                                    >
+                                        Siguiente
+                                    </button>
+                                ) : (
+                                    <button 
+                                        className="btn btn-primary" 
+                                        onClick={() => setActiveModuleId(null)}
+                                    >
+                                        Finalizar
+                                    </button>
+                                )}
+                            </div>
                         </div>
-
-                        <button
-                            className={`btn ${isCompleted(activeModule.id) ? 'btn-secondary' : 'btn-accent'} complete-btn`}
-                            onClick={() => toggleCompleted(activeModule.id)}
-                        >
-                            {isCompleted(activeModule.id) ? (
-                                <>
-                                    <Circle size={16} /> Marcar como pendiente
-                                </>
-                            ) : (
-                                <>
-                                    <CircleCheck size={16} /> Marcar módulo como completado
-                                </>
-                            )}
-                        </button>
                     </div>
                 </div>
             )}
