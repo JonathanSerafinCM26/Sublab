@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { Play, PenLine, Sparkles, Flame, Clock, TrendingUp, ChevronRight } from 'lucide-react'
+import { Play, PenLine, Sparkles, Flame, Clock, TrendingUp, ChevronRight, Headphones, BookOpenText } from 'lucide-react'
 import './HomePage.css'
 
 interface HomePageProps {
@@ -101,7 +101,7 @@ export const HomePage: FC<HomePageProps> = ({ onNavigate }) => {
                     <div className="cards-scroll">
                         <div className="rec-card" onClick={() => onNavigate('practices')}>
                             <div className="rec-icon audio">
-                                <span className="icon-wrapper">🎧</span>
+                                <span className="icon-wrapper"><Headphones size={18} /></span>
                             </div>
                             <div className="rec-info">
                                 <h4>Introducción al Subconsciente</h4>
@@ -114,7 +114,7 @@ export const HomePage: FC<HomePageProps> = ({ onNavigate }) => {
 
                         <div className="rec-card" onClick={() => onNavigate('practices', { practiceId: 'autoconocimiento-ikigai' })}>
                             <div className="rec-icon text">
-                                <span className="icon-wrapper">📝</span>
+                                <span className="icon-wrapper"><BookOpenText size={18} /></span>
                             </div>
                             <div className="rec-info">
                                 <h4>Descubre tu Ikigai</h4>

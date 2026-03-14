@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useState } from 'react'
 import {
     ArrowLeft, Check, Headphones, PlayCircle, PenTool, Clock,
-    X, BookOpen, Target, Circle, CircleCheck
+    X, BookOpen, Target, Circle, CircleCheck, Compass, Brain, Globe2, GraduationCap
 } from 'lucide-react'
 import './Practices.css'
 
@@ -16,7 +16,7 @@ type BlockId = 'autoconocimiento' | 'subconsciente' | 'exterior'
 interface CurriculumBlock {
     id: BlockId
     title: string
-    icon: string
+    icon: 'compass' | 'brain' | 'globe'
     objective: string
     dailyContent: string
     audios: string
@@ -48,7 +48,7 @@ const blocks: CurriculumBlock[] = [
     {
         id: 'autoconocimiento',
         title: 'Autoconocimiento',
-        icon: '🧭',
+        icon: 'compass',
         objective: 'Propósito de vida',
         dailyContent: 'Video explicativo + 1 práctica (ejercicio)',
         audios: '—',
@@ -57,7 +57,7 @@ const blocks: CurriculumBlock[] = [
     {
         id: 'subconsciente',
         title: 'Subconsciente',
-        icon: '🧠',
+        icon: 'brain',
         objective: 'Creencias, patrones, memorias y hábitos',
         dailyContent: 'Video explicativo + 1 práctica (audio)',
         audios: '3 audios de reprogramación',
@@ -66,7 +66,7 @@ const blocks: CurriculumBlock[] = [
     {
         id: 'exterior',
         title: 'Exterior',
-        icon: '🌍',
+        icon: 'globe',
         objective: 'Mejora áreas de la vida diaria',
         dailyContent: '1 reto o acción/hábito + 1 práctica',
         audios: '—',
@@ -220,6 +220,12 @@ const emptyProgress: CurriculumProgress = {
     notesByModuleId: {}
 }
 
+const blockIconMap = {
+    compass: Compass,
+    brain: Brain,
+    globe: Globe2
+}
+
 const loadProgress = (): CurriculumProgress => {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return emptyProgress
@@ -314,7 +320,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                         <ArrowLeft size={20} />
                     </button>
                 )}
-                <h1>🎯 Programa de Prácticas</h1>
+                <h1 className="practices-title"><Target size={20} /> Programa de Prácticas</h1>
                 <p className="subtitle">Autoconocimiento, subconsciente y áreas de vida</p>
             </div>
 
@@ -335,6 +341,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
 
             <div className="blocks-grid animate-fadeInUp stagger-2">
                 {blocks.map((block) => {
+                    const BlockIcon = blockIconMap[block.icon]
                     const blockModules = modules.filter((module) => module.blockId === block.id)
                     const blockCompleted = blockModules.filter((module) => isCompleted(module.id)).length
                     const blockProgress = blockModules.length ? (blockCompleted / blockModules.length) * 100 : 0
@@ -342,7 +349,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                     return (
                         <article key={block.id} className="block-card card">
                             <div className="block-head">
-                                <span className="block-icon">{block.icon}</span>
+                                <span className="block-icon"><BlockIcon size={18} /></span>
                                 <div>
                                     <h3>{block.title}</h3>
                                     <p>{block.objective}</p>
@@ -368,12 +375,13 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
             </div>
 
             {blocks.map((block, blockIndex) => {
+                const BlockIcon = blockIconMap[block.icon]
                 const blockModules = modules.filter((module) => module.blockId === block.id)
 
                 return (
                     <section key={block.id} className={`module-group animate-fadeInUp stagger-${Math.min(blockIndex + 2, 4)}`}>
                         <div className="section-title-row">
-                            <h2>{block.icon} {block.title}</h2>
+                            <h2><BlockIcon size={18} /> {block.title}</h2>
                         </div>
 
                         <div className="practices-list">
@@ -383,7 +391,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                                     className={`practice-card ${isCompleted(module.id) ? 'completed' : ''}`}
                                 >
                                     <div className="practice-icon-container">
-                                        <span className="practice-icon">{block.icon}</span>
+                                        <span className="practice-icon"><BlockIcon size={18} /></span>
                                         {isCompleted(module.id) && (
                                             <span className="check-badge">
                                                 <Check size={12} strokeWidth={4} />
@@ -420,7 +428,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                         </button>
 
                         <div className="player-header module-header">
-                            <div className="player-icon">📘</div>
+                            <div className="player-icon"><GraduationCap size={30} /></div>
                             <div>
                                 <h2>{activeModule.title}</h2>
                                 <p>{activeModule.description}</p>
