@@ -1,12 +1,7 @@
 FROM python:3.10-slim
 
-# Instalación de dependencias de sistema para Audio y Fonética
+# System dependencies for basic functionality (removed espeak/libsndfile heavy packages)
 RUN apt-get update && apt-get install -y \
-    espeak-ng \
-    libsndfile1-dev \
-    ffmpeg \
-    git \
-    build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p /app/weights /app/voices /app/audio_cache
+RUN mkdir -p /app/audio_cache /app/uploads
 
 # Expose port
 EXPOSE 8000

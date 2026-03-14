@@ -6,71 +6,42 @@ import os
 
 from app.core.config import settings
 from app.routers import voice, chat
-from app.services.tts.xtts_service import xtts_service
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan handler - load models at startup."""
-    print("üöÄ Starting SubLab MVP...")
-    
-    # Initialize XTTS v2 (load model once)
-    try:
-        await xtts_service.initialize()
-        print("‚úÖ XTTS v2 initialized (Spanish voice cloning ready)")
-    except Exception as e:
-        print(f"‚ö†Ô∏è XTTS v2 not available: {e}")
-        print("   TTS will use fallback")
-    
+    print("Ì∫Ä Starting SubLab MVP...")
+    print("‚òÅÔ∏è Using cloud-based AI services...")
     yield
-    
-    # Cleanup
-    print("üëã Shutting down SubLab MVP...")
 
+    # Cleanup
+    print("Ì±ã Shutting down SubLab MVP...")
 
 app = FastAPI(
-    title="SubLab MVP",
-    description="Voice Laboratory - Compare Local TTS (XTTS v2) vs Cloud TTS (Fish Audio)",
-    version="1.0.0",
+    title=settings.project_name,
+    version=settings.version,
     lifespan=lifespan
 )
 
-# CORS Configuration
+# Set up CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict this
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create directories if they don't exist
-os.makedirs(settings.voices_path, exist_ok=True)
+# Ensure directories exist
 os.makedirs(settings.audio_cache_path, exist_ok=True)
-
-# Static files for audio
-app.mount("/audio", StaticFiles(directory=settings.audio_cache_path), name="audio")
+os.makedirs(settings.weights_path, exist_ok=True)
+os.makedirs(settings.voices_path, exist_ok=True)
+os.makedirs(settings.upload_path, exist_ok=True)
 
 # Include routers
-app.include_router(voice.router, prefix="/api/voice", tags=["Voice"])
-app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
-
-
-@app.get("/")
-async def root():
-    """Root endpoint."""
-    return {
-        "message": "SubLab MVP - Voice Laboratory",
-        "docs": "/docs",
-        "status": "running"
-    }
-
+app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
+app.include_router(voice.router, prefix="/api/v1/voice", tags=["voice"])
 
 @app.get("/health")
-async def health():
-    """Health check endpoint."""
-    return {
-        "status": "ok",
-        "xtts_available": xtts_service.is_initialized,
-        "fish_audio_configured": bool(settings.fish_audio_api_key)
-    }
+async def health_check():
+    return {"status": "healthy", "version": settings.version}
