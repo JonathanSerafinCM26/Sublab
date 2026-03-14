@@ -494,11 +494,3 @@ h4 {
 .gap-lg {
   gap: var(--space-lg);
 }
-
-.glass {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-}
