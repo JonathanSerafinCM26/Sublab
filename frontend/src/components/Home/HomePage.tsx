@@ -104,21 +104,21 @@ export const HomePage: FC<HomePageProps> = ({ onNavigate }) => {
                                 <span className="icon-wrapper">🎧</span>
                             </div>
                             <div className="rec-info">
-                                <h4>Meditación Matutina</h4>
-                                <span>10 min • Audio</span>
+                                <h4>Introducción al Subconsciente</h4>
+                                <span>Piloto automático • Audio</span>
                             </div>
                             <button className="action-btn-mini">
                                 <Play size={16} fill="currentColor" />
                             </button>
                         </div>
 
-                        <div className="rec-card" onClick={() => onNavigate('practices', { practiceId: '4' })}>
+                        <div className="rec-card" onClick={() => onNavigate('practices', { practiceId: 'autoconocimiento-ikigai' })}>
                             <div className="rec-icon text">
                                 <span className="icon-wrapper">📝</span>
                             </div>
                             <div className="rec-info">
-                                <h4>Diario de Gratitud</h4>
-                                <span>5 min • Escritura</span>
+                                <h4>Descubre tu Ikigai</h4>
+                                <span>Preguntas guía • Escritura</span>
                             </div>
                             <button className="action-btn-mini">
                                 <PenLine size={16} />
