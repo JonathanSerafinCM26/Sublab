@@ -19,6 +19,7 @@ services:
       retries: 5
 
   backend:
+    image: sublab-backend:latest
     build: ./backend
     container_name: sublab-backend
     ports:
@@ -38,6 +39,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
+    image: sublab-frontend:latest
     build: ./frontend
     container_name: sublab-frontend
     ports:
