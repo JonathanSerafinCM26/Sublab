@@ -225,6 +225,15 @@ export function VoiceRecorder({ onRecordingComplete, onClose }: VoiceRecorderPro
                             <span className="pulse-dot"></span>
                             GRABANDO
                         </div>
+                        <div className="audio-waves">
+                            <div className="wave-bar"></div>
+                            <div className="wave-bar"></div>
+                            <div className="wave-bar"></div>
+                            <div className="wave-bar"></div>
+                            <div className="wave-bar"></div>
+                            <div className="wave-bar"></div>
+                            <div className="wave-bar"></div>
+                        </div>
                         <div className="timer">{formatTime(recordingTime)}</div>
                         <div className="script-box live">
                             {RECORDING_SCRIPT}

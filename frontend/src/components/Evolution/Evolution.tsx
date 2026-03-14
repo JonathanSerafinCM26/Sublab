@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { TrendingUp, Activity, Calendar, Award, ArrowLeft, Heart } from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import './Evolution.css'
 
 interface EvolutionProps {
@@ -33,13 +34,13 @@ const mockData = {
         }
     ],
     history: [
-        { day: 'Lun', value: 45 },
-        { day: 'Mar', value: 70 },
-        { day: 'Mié', value: 55 },
-        { day: 'Jue', value: 90 },
-        { day: 'Vie', value: 65 },
-        { day: 'Sáb', value: 80 },
-        { day: 'Dom', value: 100 }
+        { day: 'Lun', bienestar: 45, estres: 90 },
+        { day: 'Mar', bienestar: 50, estres: 80 },
+        { day: 'Mié', bienestar: 55, estres: 85 },
+        { day: 'Jue', bienestar: 65, estres: 60 },
+        { day: 'Vie', bienestar: 75, estres: 50 },
+        { day: 'Sáb', bienestar: 85, estres: 40 },
+        { day: 'Dom', bienestar: 90, estres: 30 }
     ],
     recentSessions: [
         { id: 1, title: 'Meditación Matutina', date: 'Hoy, 8:30 AM', duration: '10 min', type: 'Audio' },
@@ -88,24 +89,35 @@ export const Evolution: FC<EvolutionProps> = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* Activity Chart (Mock) */}
-            <div className="activity-card card animate-fadeInUp stagger-1">
-                <div className="card-header-row">
-                    <h3 className="card-title"><Calendar size={18} /> Actividad Reciente</h3>
+            {/* Activity Chart (Recharts) */}
+            <div className="activity-card card animate-fadeInUp stagger-1" style={{ overflow: 'hidden' }}>
+                <div className="card-header-row mb-4">
+                    <h3 className="card-title"><Calendar size={18} /> Balance Semanal</h3>
                 </div>
-                <div className="chart-container">
-                    {mockData.history.map((day) => (
-                        <div key={day.day} className="chart-col">
-                            <div className="bar-wrapper">
-                                <div
-                                    className="bar-fill"
-                                    style={{ height: `${day.value}%` }}
-                                    title={`${day.value} min`}
-                                ></div>
-                            </div>
-                            <span className="col-label">{day.day}</span>
-                        </div>
-                    ))}
+                <div className="chart-container" style={{ height: '220px', width: '100%', padding: 0 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={mockData.history} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="colorBienestar" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="var(--accent)" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="colorEstres" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="var(--error)" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="var(--error)" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} dy={10} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                            <Tooltip 
+                                contentStyle={{ backgroundColor: 'var(--surface-elevated)', borderRadius: '12px', border: 'none', color: 'var(--text)', boxShadow: 'var(--shadow-sm)' }}
+                                itemStyle={{ fontWeight: 600 }}
+                            />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                            <Area type="monotone" dataKey="bienestar" name="Bienestar" stroke="var(--accent)" strokeWidth={3} fillOpacity={1} fill="url(#colorBienestar)" />
+                            <Area type="monotone" dataKey="estres" name="Estrés" stroke="var(--error)" strokeWidth={3} fillOpacity={1} fill="url(#colorEstres)" />
+                        </AreaChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 

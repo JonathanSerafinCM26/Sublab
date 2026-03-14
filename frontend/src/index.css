@@ -494,3 +494,43 @@ h4 {
 .gap-lg {
   gap: var(--space-lg);
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #c1d4de;
+    --primary-dark: #e5d8f2;
+    --primary-light: #4A6BA8;
+
+    --accent: #A5D15F;
+    --accent-light: #FFD47A;
+
+    --background: #141720;
+    --background-gradient: linear-gradient(180deg, #141720 0%, #1A1D27 100%);
+    --surface: #222633;
+    --surface-elevated: #2C3142;
+    --surface-alt: #1E2536;
+
+    --text: #F1F4FA;
+    --text-muted: #A8B8D0;
+    --text-dim: #7C8EA6;
+    --text-light: #FFFFFF;
+
+    --border: rgba(193, 212, 222, 0.15);
+    --shadow-color: rgba(0, 0, 0, 0.5);
+
+    --ai-gradient: linear-gradient(135deg, #2A2E3D 0%, #222938 100%);
+  }
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(30, 37, 54, 0.5);
+    border-top: 1px solid rgba(193, 212, 222, 0.1);
+  }
+}

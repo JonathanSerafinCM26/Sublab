@@ -238,9 +238,9 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, voiceId }) => {
                         <div className="message-content">
                             {message.isLoading ? (
                                 <div className="typing-indicator">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
+                                    <span className="typing-dot"></span>
+                                    <span className="typing-dot"></span>
+                                    <span className="typing-dot"></span>
                                 </div>
                             ) : (
                                 <>

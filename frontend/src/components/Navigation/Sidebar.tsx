@@ -19,7 +19,7 @@ export const Sidebar: FC<SidebarProps> = ({ currentPage, onNavigate }) => {
     ]
 
     return (
-        <aside className="desktop-sidebar">
+        <aside className="desktop-sidebar glass">
             <div className="sidebar-header">
                 <div className="logo-container">
                     <img className="logo-icon" src={sublabLogo} alt="SubLab" />

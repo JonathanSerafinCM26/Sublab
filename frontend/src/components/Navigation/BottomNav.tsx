@@ -20,7 +20,7 @@ const navItems = [
 
 export const BottomNav: FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
     return (
-        <nav className="bottom-nav">
+        <nav className="bottom-nav glass">
             {navItems.map(item => (
                 <button
                     key={item.id}
