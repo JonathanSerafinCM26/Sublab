@@ -501,3 +501,19 @@ h4 {
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+/* Dark Theme overrides */
+body.dark-theme {
+    --text: #f5f5fa;
+    --text-muted: #a0a0b0;
+    --text-light: #707080;
+    --background: #121216;
+    --surface: #1e1e24;
+    --surface-light: #25252c;
+    --surface-elevated: #2a2a32;
+    --border: #33333a;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 2px 8px var(--shadow-color);
+    --shadow-md: 0 4px 16px var(--shadow-color);
+    --shadow-lg: 0 8px 24px var(--shadow-color);
+}
