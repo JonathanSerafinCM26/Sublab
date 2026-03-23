@@ -39,14 +39,13 @@
     .app-main {
         padding-bottom: 0;
         padding: var(--space-xl);
-        max-width: 100%;
-        /* Unlock full width */
+        max-width: calc(100vw - 280px); /* Restrict to remaining width */
         overflow-y: auto;
     }
 
     /* Hide Bottom Nav on Desktop */
-    .app>nav {
-        display: none;
+    .app > .bottom-nav {
+        display: none !important;
     }
 
     /* Settings page can be wider on desktop but still contained */
