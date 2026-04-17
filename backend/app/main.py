@@ -10,12 +10,12 @@ from app.routers import voice, chat
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan handler - load models at startup."""
-    print("Ì∫Ä Starting SubLab MVP...")
+    print("ÔøΩÔøΩÔøΩ Starting SubLab MVP...")
     print("‚òÅÔ∏è Using cloud-based AI services...")
     yield
 
     # Cleanup
-    print("Ì±ã Shutting down SubLab MVP...")
+    print("ÔøΩÔøΩÔøΩ Shutting down SubLab MVP...")
 
 app = FastAPI(
     title=settings.project_name,
@@ -37,6 +37,10 @@ os.makedirs(settings.audio_cache_path, exist_ok=True)
 os.makedirs(settings.weights_path, exist_ok=True)
 os.makedirs(settings.voices_path, exist_ok=True)
 os.makedirs(settings.upload_path, exist_ok=True)
+
+# Mount materials as static files
+materials_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Material")
+app.mount("/materials", StaticFiles(directory=materials_dir), name="materials")
 
 # Include routers
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])

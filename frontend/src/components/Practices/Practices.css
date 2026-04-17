@@ -860,6 +860,19 @@
     text-align: center;
 }
 
+.video-player {
+    width: 100%;
+    max-width: 600px;
+    border-radius: var(--radius-lg);
+    background: var(--background);
+}
+
+.audio-player {
+    width: 100%;
+    max-width: 400px;
+    border-radius: var(--radius-lg);
+}
+
 .icon-pulse {
     animation: pulse 2s infinite;
     color: var(--primary);

@@ -30,6 +30,8 @@ interface CurriculumModule {
     description: string
     textContent: string[]
     video?: string
+    videoUrl?: string
+    audioUrl?: string
     practice: string[]
     audios: string[]
     resources: string[]
@@ -85,9 +87,11 @@ const modules: CurriculumModule[] = [
             '1) ¿A qué te gustaba jugar de niño?',
             '2) ¿En qué te piden tu opinión tus familiares, amigos o compañeros?',
             '3) Si tuvieras que enseñar o explicar algo, ¿qué sería?',
-            '4) ¿Qué se te da bien, disfrutas haciendo y se te pasa el tiempo volando?'
+            '4) ¿Qué se te da bien, disfrutas fazendo y se te pasa el tiempo volando?'
         ],
         video: 'Video explicativo (pendiente de enlace final).',
+        videoUrl: '/materials/IKIGAI/video1074764332.mp4',
+        audioUrl: '/materials/IKIGAI/audio1074764332.m4a',
         practice: ['Práctica: descubre tu ikigai.'],
         audios: [],
         resources: ['Recurso recomendado: 1 libro o video sobre propósito de vida (placeholder).']
@@ -103,6 +107,8 @@ const modules: CurriculumModule[] = [
             '2) ¿Qué fortalezas posees?'
         ],
         video: 'Video explicativo DAFO (pendiente de enlace final).',
+        videoUrl: '/materials/DAFO/video1854021737.mp4',
+        audioUrl: '/materials/DAFO/audio1854021737.m4a',
         practice: ['Práctica: descubre tu DAFO.'],
         audios: [],
         resources: ['Recurso recomendado: 1 libro o video sobre autoconocimiento (placeholder).']
@@ -117,6 +123,8 @@ const modules: CurriculumModule[] = [
             'Al trabajarlo, comprenderás mejor cómo son los demás para gestionar trabajo en equipo, atención al cliente, emociones y momentos difíciles.'
         ],
         video: 'Video: Los nueve eneatipos del Eneagrama | Borja Vilaseca - YouTube.',
+        videoUrl: '/materials/ENEAGRAMA/video1311298601.mp4',
+        audioUrl: '/materials/ENEAGRAMA/audio1311298601.m4a',
         practice: [
             'Práctica: descubre tu eneatipo.',
             'Si tienes más tiempo, reflexiona sobre el eneatipo de tu familia, pareja, amigos e hijos.'
@@ -136,6 +144,9 @@ const modules: CurriculumModule[] = [
             'VISIÓN: ¿Qué quieres haber alcanzado en 10 o 20 años? ¿Qué estarás haciendo y dónde te ves?',
             'MISIÓN: ¿Qué te hace levantarte cada mañana?'
         ],
+        video: 'Video explicativo (pendiente de enlace final).',
+        videoUrl: '/materials/VISIÓN, VALORES, MISIÓN/video1552753827.mp4',
+        audioUrl: '/materials/VISIÓN, VALORES, MISIÓN/audio1552753827.m4a',
         practice: [
             'Valores: encuentra y ordena tus 3 valores principales; si puedes, amplía a 7-10 valores.',
             'Visión: escríbela en un diario o folio y colócala en un lugar visible para verla cada día.',
@@ -205,6 +216,8 @@ const modules: CurriculumModule[] = [
             'Descubre de un vistazo cómo está yendo tu vida actual: ¿tu rueda, rueda?'
         ],
         video: 'Video: María (pendiente de enlace final).',
+        videoUrl: '/materials/LA RUEDA DE LA VIDA/video1252771464.mp4',
+        audioUrl: '/materials/LA RUEDA DE LA VIDA/audio1252771464.m4a',
         practice: [
             'Realiza tu rueda de la vida actual.',
             'Al lado, crea tu rueda objetivo para diciembre de este año.',
@@ -468,13 +481,16 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                                             </ul>
                                         </section>
 
-                                        {activeModule.video && (
+                                        {activeModule.videoUrl && (
                                             <section className="video-section">
                                                 <h3><PlayCircle size={16} /> Video</h3>
-                                                <div className="video-placeholder">
-                                                    <Target size={30} className="icon-pulse" />
-                                                    <p>{activeModule.video}</p>
-                                                </div>
+                                                <video 
+                                                    controls 
+                                                    className="video-player"
+                                                    src={activeModule.videoUrl}
+                                                >
+                                                    Tu navegador no soporta video HTML5.
+                                                </video>
                                             </section>
                                         )}
                                     </div>
@@ -493,6 +509,19 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                                                 ))}
                                             </ul>
                                         </section>
+
+                                        {activeModule.audioUrl && (
+                                            <section>
+                                                <h3><Headphones size={16} /> Audio</h3>
+                                                <audio 
+                                                    controls 
+                                                    className="audio-player"
+                                                    src={activeModule.audioUrl}
+                                                >
+                                                    Tu navegador no soporta audio HTML5.
+                                                </audio>
+                                            </section>
+                                        )}
 
                                         {activeModule.audios.length > 0 && (
                                             <section>
