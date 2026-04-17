@@ -7,9 +7,12 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
     # App
+    project_name: str = "SubLab API"
+    version: str = "1.0.0"
     env: str = "development"
     port: int = 8000
     debug: bool = True
+    cors_origins: list[str] = ["*"]
     
     # Database
     database_url: str = "postgresql://sublab:sublab@db:5432/sublab"
