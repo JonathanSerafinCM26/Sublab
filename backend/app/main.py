@@ -39,8 +39,18 @@ os.makedirs(settings.voices_path, exist_ok=True)
 os.makedirs(settings.upload_path, exist_ok=True)
 
 # Mount materials as static files
-materials_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Material")
-app.mount("/api/v1/materials", StaticFiles(directory=materials_dir), name="materials")
+# In Docker, we expect Material to be at /app/Material
+materials_dir = "/app/Material"
+if not os.path.exists(materials_dir):
+    # Fallback for local development
+    materials_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Material")
+
+print(f"📁 Mounting materials from: {os.path.abspath(materials_dir)}")
+if os.path.exists(materials_dir):
+    print(f"✅ Material directory found. Contents: {os.listdir(materials_dir)}")
+    app.mount("/api/v1/materials", StaticFiles(directory=materials_dir), name="materials_api")
+else:
+    print(f"❌ Material directory NOT found at {materials_dir}")
 
 # Include routers
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
