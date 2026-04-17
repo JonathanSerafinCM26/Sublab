@@ -61,7 +61,6 @@ async def clone_voice(
         return CloneVoiceResponse(
             voice_name=voice_name,
             fish=result.get("fish", {}),
-            xtts=result.get("xtts", {}),
             default_voice_id=tts_manager.default_voice_id,
             processing_time=processing_time
         )
@@ -72,9 +71,9 @@ async def clone_voice(
 
 @router.get("/voices")
 async def list_voices():
-    """List available voices from all providers.
+    """List available voices from available providers.
     
-    Returns voices from Fish Audio and XTTS, along with the current default voice.
+    Returns voices from Fish Audio, along with the current default voice.
     """
     try:
         voices = await tts_manager.get_available_voices()
@@ -85,10 +84,6 @@ async def list_voices():
                 "fish_audio": {
                     "configured": fish_service.is_configured,
                     "is_primary": True
-                },
-                "xtts": {
-                    "initialized": xtts_service.is_initialized,
-                    "is_fallback": True
                 }
             }
         }
@@ -100,9 +95,7 @@ async def list_voices():
 async def set_default_voice(request: SetDefaultVoiceRequest):
     """Set the default voice for TTS generation.
     
-    The voice_id can be:
-    - A Fish Audio reference_id (from cloning)
-    - An XTTS voice directory name
+    The voice_id can be a Fish Audio reference_id (from cloning).
     """
     try:
         tts_manager.set_default_voice(request.voice_id)
@@ -128,22 +121,8 @@ async def get_status():
     """Get status of TTS providers including available voices."""
     status = tts_manager.get_status()
     
-    # Add more details
-    local_voices = []
-    if xtts_service.is_initialized:
-        local_voices = xtts_service.get_available_voices()
-    
     return {
         "tts_manager": status,
-        "local": {
-            "provider": "xtts-v2",
-            "initialized": xtts_service.is_initialized,
-            "is_fallback": True,
-            "cost": "$0.00",
-            "privacy": "En Dispositivo",
-            "supports_cloning": True,
-            "voices": local_voices
-        },
         "cloud": {
             "provider": "fish_audio",
             "configured": fish_service.is_configured,

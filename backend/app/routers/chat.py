@@ -6,7 +6,7 @@ import time
 import io
 import base64
 
-from app.services.tts import tts_manager, xtts_service, fish_service
+from app.services.tts import tts_manager, fish_service
 from app.services.llm import llm_service
 
 
@@ -37,11 +37,10 @@ class TTSTestRequest(BaseModel):
 async def generate_chat_response(request: ChatMessage):
     """Generate a chat response with optional TTS audio.
     
-    Pipeline: Message → LLM → Text → TTS (Fish first, XTTS fallback) → Audio
+    Pipeline: Message → LLM → Text → TTS (Fish Audio) → Audio
     
     The TTS provider is selected automatically:
     1. Fish Audio (cloud) - if configured
-    2. XTTS (local) - as fallback
     """
     metrics = {
         "llm_latency_ms": 0,
@@ -72,7 +71,7 @@ async def generate_chat_response(request: ChatMessage):
         print(f"🔊 TTS: Generating audio for text ({len(coach_response)} chars)...")
         
         try:
-            # Use unified TTS manager (Fish first, XTTS fallback)
+            # Use unified TTS manager
             audio_data, provider_used = await tts_manager.generate_audio(
                 coach_response, 
                 request.voice_id
@@ -80,8 +79,8 @@ async def generate_chat_response(request: ChatMessage):
             
             metrics["tts_latency_ms"] = int((time.time() - tts_start) * 1000)
             metrics["provider_used"] = provider_used
-            metrics["cost"] = "$0.00" if provider_used == "xtts-v2" else "~$0.001"
-            metrics["privacy"] = "En Dispositivo" if provider_used == "xtts-v2" else "Enviado a API"
+            metrics["cost"] = "~$0.001"
+            metrics["privacy"] = "Enviado a API"
             
             if audio_data:
                 print(f"✅ TTS: Audio generated! Size: {len(audio_data)} bytes, Provider: {provider_used}, Latency: {metrics['tts_latency_ms']}ms")
@@ -121,7 +120,7 @@ async def generate_chat_response(request: ChatMessage):
 async def test_tts(request: TTSTestRequest):
     """Test TTS generation directly (without LLM).
     
-    Uses unified TTS manager (Fish first, XTTS fallback).
+    Uses unified TTS manager.
     Returns audio file for the given text.
     """
     start_time = time.time()
@@ -140,7 +139,7 @@ async def test_tts(request: TTSTestRequest):
             headers={
                 "X-TTS-Provider": provider_used,
                 "X-TTS-Latency-Ms": str(latency_ms),
-                "X-TTS-Cost": "$0.00" if provider_used == "xtts-v2" else "~$0.001"
+                "X-TTS-Cost": "~$0.001"
             }
         )
         
@@ -150,14 +149,13 @@ async def test_tts(request: TTSTestRequest):
 
 @router.post("/compare")
 async def compare_tts(text: str, voice_id: Optional[str] = None):
-    """Compare TTS output from both providers.
+    """Compare TTS output from available providers.
     
-    Generates audio from both Fish Audio and XTTS for comparison.
+    Generates audio from Fish Audio for comparison.
     """
     results = {
         "text": text,
-        "fish": {"status": "pending", "latency_ms": 0},
-        "xtts": {"status": "pending", "latency_ms": 0}
+        "fish": {"status": "pending", "latency_ms": 0}
     }
     
     # Generate with Fish Audio
@@ -176,25 +174,6 @@ async def compare_tts(text: str, voice_id: Optional[str] = None):
             results["fish"] = {"status": "error", "error": str(e)}
     else:
         results["fish"]["status"] = "not_configured"
-    
-    # Generate with XTTS
-    if xtts_service.is_initialized:
-        try:
-            t0 = time.time()
-            local_audio = await xtts_service.generate_audio(text, voice_id)
-            t1 = time.time()
-            results["xtts"] = {
-                "provider": "xtts-v2",
-                "time": f"{t1-t0:.2f}s",
-                "audio_size": len(local_audio) if local_audio else 0,
-                "audio": base64.b64encode(local_audio).decode("utf-8") if local_audio else None,
-                "cost": "$0.00",
-                "privacy": "En Dispositivo"
-            }
-        except Exception as e:
-            results["xtts"] = {"error": str(e)}
-    else:
-        results["xtts"] = {"error": "XTTS Not initialized"}
     
     return results
 
