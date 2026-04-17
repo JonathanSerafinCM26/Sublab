@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional, Any
 import time
 
-from app.services.tts import tts_manager, fish_service, xtts_service
+from app.services.tts import tts_manager, fish_service
 
 
 router = APIRouter()
@@ -13,7 +13,6 @@ class CloneVoiceResponse(BaseModel):
     """Response from voice cloning endpoint."""
     voice_name: str
     fish: dict = {}
-    xtts: dict = {}
     default_voice_id: Optional[str] = None
     processing_time: Optional[float] = None
 
