@@ -40,7 +40,7 @@ os.makedirs(settings.upload_path, exist_ok=True)
 
 # Mount materials as static files
 materials_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Material")
-app.mount("/materials", StaticFiles(directory=materials_dir), name="materials")
+app.mount("/api/v1/materials", StaticFiles(directory=materials_dir), name="materials")
 
 # Include routers
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])

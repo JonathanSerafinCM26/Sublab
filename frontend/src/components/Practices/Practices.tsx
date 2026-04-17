@@ -44,6 +44,17 @@ interface CurriculumProgress {
 
 const STORAGE_KEY = 'sublab_curriculum_progress_v1'
 
+const getMaterialsBaseUrl = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || ''
+    return apiUrl || ''
+}
+
+const resolveMaterialUrl = (path: string | undefined) => {
+    if (!path) return undefined
+    const base = getMaterialsBaseUrl()
+    return base ? `${base}${path}` : path
+}
+
 const generalInstructions = 'No reflexiones demasiado: escribe en un papel lo primero que te pasa por la cabeza. Puedes repetir los ejercicios las veces que necesites y dedicarles más tiempo si lo deseas.'
 
 const blocks: CurriculumBlock[] = [
@@ -90,8 +101,8 @@ const modules: CurriculumModule[] = [
             '4) ¿Qué se te da bien, disfrutas fazendo y se te pasa el tiempo volando?'
         ],
         video: 'Video explicativo (pendiente de enlace final).',
-        videoUrl: '/materials/IKIGAI/video1074764332.mp4',
-        audioUrl: '/materials/IKIGAI/audio1074764332.m4a',
+        videoUrl: '/api/v1/materials/IKIGAI/video1074764332.mp4',
+        audioUrl: '/api/v1/materials/IKIGAI/audio1074764332.m4a',
         practice: ['Práctica: descubre tu ikigai.'],
         audios: [],
         resources: ['Recurso recomendado: 1 libro o video sobre propósito de vida (placeholder).']
@@ -107,8 +118,8 @@ const modules: CurriculumModule[] = [
             '2) ¿Qué fortalezas posees?'
         ],
         video: 'Video explicativo DAFO (pendiente de enlace final).',
-        videoUrl: '/materials/DAFO/video1854021737.mp4',
-        audioUrl: '/materials/DAFO/audio1854021737.m4a',
+        videoUrl: '/api/v1/materials/DAFO/video1854021737.mp4',
+        audioUrl: '/api/v1/materials/DAFO/audio1854021737.m4a',
         practice: ['Práctica: descubre tu DAFO.'],
         audios: [],
         resources: ['Recurso recomendado: 1 libro o video sobre autoconocimiento (placeholder).']
@@ -123,8 +134,8 @@ const modules: CurriculumModule[] = [
             'Al trabajarlo, comprenderás mejor cómo son los demás para gestionar trabajo en equipo, atención al cliente, emociones y momentos difíciles.'
         ],
         video: 'Video: Los nueve eneatipos del Eneagrama | Borja Vilaseca - YouTube.',
-        videoUrl: '/materials/ENEAGRAMA/video1311298601.mp4',
-        audioUrl: '/materials/ENEAGRAMA/audio1311298601.m4a',
+        videoUrl: '/api/v1/materials/ENEAGRAMA/video1311298601.mp4',
+        audioUrl: '/api/v1/materials/ENEAGRAMA/audio1311298601.m4a',
         practice: [
             'Práctica: descubre tu eneatipo.',
             'Si tienes más tiempo, reflexiona sobre el eneatipo de tu familia, pareja, amigos e hijos.'
@@ -145,8 +156,8 @@ const modules: CurriculumModule[] = [
             'MISIÓN: ¿Qué te hace levantarte cada mañana?'
         ],
         video: 'Video explicativo (pendiente de enlace final).',
-        videoUrl: '/materials/VISIÓN, VALORES, MISIÓN/video1552753827.mp4',
-        audioUrl: '/materials/VISIÓN, VALORES, MISIÓN/audio1552753827.m4a',
+        videoUrl: '/api/v1/materials/VISION_VALORES_MISION/video1552753827.mp4',
+        audioUrl: '/api/v1/materials/VISION_VALORES_MISION/audio1552753827.m4a',
         practice: [
             'Valores: encuentra y ordena tus 3 valores principales; si puedes, amplía a 7-10 valores.',
             'Visión: escríbela en un diario o folio y colócala en un lugar visible para verla cada día.',
@@ -216,8 +227,8 @@ const modules: CurriculumModule[] = [
             'Descubre de un vistazo cómo está yendo tu vida actual: ¿tu rueda, rueda?'
         ],
         video: 'Video: María (pendiente de enlace final).',
-        videoUrl: '/materials/LA RUEDA DE LA VIDA/video1252771464.mp4',
-        audioUrl: '/materials/LA RUEDA DE LA VIDA/audio1252771464.m4a',
+        videoUrl: '/api/v1/materials/RUEDA_VIDA/video1252771464.mp4',
+        audioUrl: '/api/v1/materials/RUEDA_VIDA/audio1252771464.m4a',
         practice: [
             'Realiza tu rueda de la vida actual.',
             'Al lado, crea tu rueda objetivo para diciembre de este año.',
@@ -487,7 +498,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                                                 <video 
                                                     controls 
                                                     className="video-player"
-                                                    src={activeModule.videoUrl}
+                                                    src={resolveMaterialUrl(activeModule.videoUrl)}
                                                 >
                                                     Tu navegador no soporta video HTML5.
                                                 </video>
@@ -516,7 +527,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                                                 <audio 
                                                     controls 
                                                     className="audio-player"
-                                                    src={activeModule.audioUrl}
+                                                    src={resolveMaterialUrl(activeModule.audioUrl)}
                                                 >
                                                     Tu navegador no soporta audio HTML5.
                                                 </audio>
