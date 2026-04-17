@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     weights_path: str = "/app/weights"
     voices_path: str = "/app/voices"
     audio_cache_path: str = "/app/audio_cache"
+    upload_path: str = "/app/uploads"
     
     # Kokoro TTS
     kokoro_model_path: Optional[str] = None
