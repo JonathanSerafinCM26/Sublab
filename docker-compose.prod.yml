@@ -16,6 +16,7 @@ services:
     volumes:
       - ./audio_cache:/app/audio_cache
       - ./uploads:/app/uploads
+      - ./backend/Material:/app/Material
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
