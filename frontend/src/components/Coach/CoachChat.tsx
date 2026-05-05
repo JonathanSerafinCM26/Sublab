@@ -1,7 +1,7 @@
 import { FC, useState, useRef, useEffect } from 'react'
 import { sendMessage, testTTS } from '../../services/api'
 import { Send, CheckCircle, Volume2, ArrowLeft, Clock, Zap, Sparkles } from 'lucide-react'
-import sublabLogo from '../../assets/sublab-logo.svg'
+
 import './CoachChat.css'
 
 interface CoachChatProps {
@@ -232,7 +232,7 @@ export const CoachChat: FC<CoachChatProps> = ({ onBack, voiceId }) => {
                     >
                         {message.role === 'assistant' && (
                             <div className="message-avatar">
-                                <img src={sublabLogo} alt="SubLab Coach" className="message-avatar-logo" />
+                                <img src="/logos/Logo_azul.png" alt="SubLab Coach" className="message-avatar-logo" />
                             </div>
                         )}
                         <div className="message-content">

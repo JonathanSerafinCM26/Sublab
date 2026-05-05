@@ -1,6 +1,5 @@
 import { FC } from 'react'
 import { Home, Target, Sparkles, TrendingUp, Settings } from 'lucide-react'
-import sublabLogo from '../../assets/sublab-logo.svg'
 import './BottomNav.css' // Reuse some styles or create new ones
 
 interface SidebarProps {
@@ -22,7 +21,7 @@ export const Sidebar: FC<SidebarProps> = ({ currentPage, onNavigate }) => {
         <aside className="desktop-sidebar glass">
             <div className="sidebar-header">
                 <div className="logo-container">
-                    <img className="logo-icon" src={sublabLogo} alt="SubLab" />
+                    <img className="logo-icon" src="/logos/Logo_azul.png" alt="SubLab" />
                     <h1>SubLab</h1>
                 </div>
             </div>

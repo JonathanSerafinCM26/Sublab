@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { Home, Target, TrendingUp, Settings } from 'lucide-react'
-import sublabMark from '../../assets/sublab-mark.svg'
+
 import './BottomNav.css'
 
 type Page = 'home' | 'coach' | 'evolution' | 'practices' | 'settings'
@@ -29,7 +29,7 @@ export const BottomNav: FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
                 >
                     <span className="nav-icon">
                         {item.icon === 'logo'
-                            ? <img src={sublabMark} alt="SubLab" className="nav-icon-img nav-icon-mark" />
+                            ? <img src="/logos/Logo_azul.png" alt="SubLab" className="nav-icon-img" />
                             : <item.icon size={18} />}
                     </span>
                     <span className="nav-label">{item.label}</span>
