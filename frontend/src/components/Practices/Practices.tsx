@@ -1,7 +1,8 @@
 import { FC, useEffect, useMemo, useState } from 'react'
 import {
     ArrowLeft, Check, Headphones, PlayCircle, PenTool, Clock,
-    X, BookOpen, Target, Circle, CircleCheck, Compass, Brain, Globe2, GraduationCap
+    X, BookOpen, Target, Circle, CircleCheck, Compass, Brain, Globe2, GraduationCap,
+    Film, Star, ThumbsUp, MessageSquare
 } from 'lucide-react'
 import './Practices.css'
 
@@ -33,27 +34,21 @@ interface CurriculumModule {
     videoUrl?: string
     audioUrl?: string
     practice: string[]
-    audios: string[]
+    audios: { label: string; file: string }[]
     resources: string[]
+    books: string[]
+    movies: string[]
 }
 
 interface CurriculumProgress {
     completedModuleIds: string[]
     notesByModuleId: Record<string, string>
+    feedbackByModuleId: Record<string, { rating: number; comment: string }>
 }
 
 const STORAGE_KEY = 'sublab_curriculum_progress_v1'
 
-const getMaterialsBaseUrl = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || ''
-    return apiUrl || ''
-}
-
-const resolveMaterialUrl = (path: string | undefined) => {
-    if (!path) return undefined
-    const base = getMaterialsBaseUrl()
-    return base ? `${base}${path}` : path
-}
+const audioBasePath = '/audio/'
 
 const generalInstructions = 'No reflexiones demasiado: escribe en un papel lo primero que te pasa por la cabeza. Puedes repetir los ejercicios las veces que necesites y dedicarles más tiempo si lo deseas.'
 
@@ -62,8 +57,8 @@ const blocks: CurriculumBlock[] = [
         id: 'autoconocimiento',
         title: 'Autoconocimiento',
         icon: 'compass',
-        objective: 'Propósito de vida',
-        dailyContent: 'Video explicativo + 1 práctica (ejercicio)',
+        objective: 'Propósito, Ikigai',
+        dailyContent: 'Video explicativo María + responder preguntas',
         audios: '—',
         resources: '1 libro o video'
     },
@@ -72,7 +67,7 @@ const blocks: CurriculumBlock[] = [
         title: 'Subconsciente',
         icon: 'brain',
         objective: 'Creencias, patrones, memorias y hábitos',
-        dailyContent: 'Video explicativo + 1 práctica (audio)',
+        dailyContent: 'Video explicativo + audio práctica',
         audios: '3 audios de reprogramación',
         resources: '1 libro o video'
     },
@@ -98,14 +93,25 @@ const modules: CurriculumModule[] = [
             '1) ¿A qué te gustaba jugar de niño?',
             '2) ¿En qué te piden tu opinión tus familiares, amigos o compañeros?',
             '3) Si tuvieras que enseñar o explicar algo, ¿qué sería?',
-            '4) ¿Qué se te da bien, disfrutas fazendo y se te pasa el tiempo volando?'
+            '4) ¿Qué se te da bien, disfrutas haciendo y se te pasa el tiempo volando?'
         ],
         video: 'Video explicativo (pendiente de enlace final).',
         videoUrl: '/api/v1/materials/IKIGAI/video1074764332.mp4',
         audioUrl: '/api/v1/materials/IKIGAI/audio1074764332.m4a',
         practice: ['Práctica: descubre tu ikigai.'],
         audios: [],
-        resources: ['Recurso recomendado: 1 libro o video sobre propósito de vida (placeholder).']
+        resources: [],
+        books: [
+            'El hombre en busca de sentido - Viktor Frankl',
+            'Ikigai - Francesc Miralles y Héctor García'
+        ],
+        movies: [
+            'En busca de la felicidad',
+            'Mi vida sin mí',
+            'Soul',
+            'Childhood',
+            'Hidden figures'
+        ]
     },
     {
         id: 'autoconocimiento-dafo',
@@ -122,7 +128,9 @@ const modules: CurriculumModule[] = [
         audioUrl: '/api/v1/materials/DAFO/audio1854021737.m4a',
         practice: ['Práctica: descubre tu DAFO.'],
         audios: [],
-        resources: ['Recurso recomendado: 1 libro o video sobre autoconocimiento (placeholder).']
+        resources: [],
+        books: [],
+        movies: []
     },
     {
         id: 'autoconocimiento-eneagrama',
@@ -138,10 +146,15 @@ const modules: CurriculumModule[] = [
         audioUrl: '/api/v1/materials/ENEAGRAMA/audio1311298601.m4a',
         practice: [
             'Práctica: descubre tu eneatipo.',
-            'Si tienes más tiempo, reflexiona sobre el eneatipo de tu familia, pareja, amigos e hijos.'
+            '¿Cuál eres tú? ¿Cuáles son tu pareja, padres, amigos?'
         ],
         audios: [],
-        resources: ['Recurso recomendado: libro o conferencia sobre eneagrama (placeholder).']
+        resources: [],
+        books: [
+            'La sabiduría del eneagrama - Riso y Hudson',
+            'Eneagrama en el amor y en el trabajo - Helen Palmer'
+        ],
+        movies: []
     },
     {
         id: 'autoconocimiento-valores-mision-vision',
@@ -161,10 +174,23 @@ const modules: CurriculumModule[] = [
         practice: [
             'Valores: encuentra y ordena tus 3 valores principales; si puedes, amplía a 7-10 valores.',
             'Visión: escríbela en un diario o folio y colócala en un lugar visible para verla cada día.',
-            'Misión: define el paso a paso diario para acercarte a tu visión.'
+            'Misión: define el paso a paso diario para acercarte a tu visión.',
+            'Crear Vision board.'
         ],
         audios: [],
-        resources: ['Recurso recomendado: 1 libro o video sobre propósito y planificación personal (placeholder).']
+        resources: [],
+        books: [
+            'Los 7 hábitos de la gente altamente efectiva - Stephen Covey',
+            'Si no te gusta tu vida, cámbiala - Jesús Calleja',
+            'Ali',
+            'Todos tenemos una historia que contar - Bisila Bokoko'
+        ],
+        movies: [
+            'As Good as it gets',
+            'Te puede pasar a ti',
+            'Monsieur Aznavour',
+            'The founder'
+        ]
     },
     {
         id: 'subconsciente-introduccion',
@@ -180,8 +206,19 @@ const modules: CurriculumModule[] = [
             'Sé consciente durante tu día de lo que haces en piloto automático.',
             'Escríbelo en tu diario: ¿Qué acciones hago diariamente en piloto automático?'
         ],
-        audios: ['Audio: Estoy tranquilo y relajado (3 veces al día).'],
-        resources: ['Recurso recomendado: 1 libro o video sobre subconsciente (placeholder).']
+        audios: [
+            { label: 'Audio: Estoy tranquilo y relajado', file: 'SubLab_Relajacion.m4a' }
+        ],
+        resources: [],
+        books: [
+            'El poder del tu mente subconsciente - Joseph Murphy',
+            'Poder sin límites - Tony Robbins',
+            'El camino más fácil - Mabel Katz'
+        ],
+        movies: [
+            'TLE',
+            'Di que si'
+        ]
     },
     {
         id: 'subconsciente-neurociencia',
@@ -193,16 +230,29 @@ const modules: CurriculumModule[] = [
             '1) Dormir 7-9 h/día. Un buen día depende también de cómo te acuestas.',
             '2) Invierte 5-30 min/día en contemplar en un parque y parar.',
             '3) Haz una cosa nueva para salir de tu zona de confort (semanal o más frecuente).',
-            '4) Elige mejor tus palabras: cambia “tengo que” por “quiero”, “tengo miedo” por “puedo hacerlo”.',
-            'Cambia una creencia conscientemente: “no soy bueno en inglés” → “aún estoy aprendiendo inglés”.',
+            '4) Elige mejor tus palabras: cambia "tengo que" por "quiero", "tengo miedo" por "puedo hacerlo".',
+            'Cambia una creencia conscientemente: "no soy bueno en inglés" → "aún estoy aprendiendo inglés".',
             'Piensa en progresión anual: pequeñas acciones repetidas generan avances grandes.'
         ],
         practice: [
             'Elige 1 hábito nuevo y define tu frecuencia diaria.',
-            'Elige 1 creencia a reescribir en versión potenciadora y practícala cada día.'
+            'Elige 1 creencia a reescribir en versión potenciadora y practícala cada día.',
+            '¿Qué 3 nuevas creencias/hábitos quiero cambiar? Antes y después.'
         ],
-        audios: ['Audio: Duermo bien.', 'Audio: Tengo confianza en mí.'],
-        resources: ['Recurso recomendado: libro o conferencia de neurociencia práctica (placeholder).']
+        audios: [
+            { label: 'Audio: Tengo confianza en mí', file: 'SubLab_Confio_en_mi.mp3' },
+            { label: 'Audio: Duermo bien', file: 'SubLab_Duermir_bien.m4a' }
+        ],
+        resources: [],
+        books: [
+            'Entrena tu cerebro - Marta Romo',
+            'El club de las 5 de la mañana - Robin S. Sharma',
+            'Hábitos atómicos - James Clear',
+            'El poder de los hábitos - Charles Duhigg'
+        ],
+        movies: [
+            'Inside Out'
+        ]
     },
     {
         id: 'subconsciente-autosugestion',
@@ -215,8 +265,16 @@ const modules: CurriculumModule[] = [
             'Elige conscientemente con quién te rodeas.'
         ],
         practice: ['Haz una revisión rápida de tu entorno y detecta influencias que te potencian o te frenan.'],
-        audios: ['Audio: Estoy relajado.'],
-        resources: ['Recurso recomendado: 1 libro o video sobre entorno e influencia (placeholder).']
+        audios: [
+            { label: 'Audio: Estoy relajado', file: 'SubLab_Relajacion.m4a' }
+        ],
+        resources: [],
+        books: [
+            'Usted puede sanar su vida - Louise Hay',
+            'Los 4 acuerdos - Miguel Ruiz',
+            'Dejar ir - David R. Hawkins'
+        ],
+        movies: []
     },
     {
         id: 'exterior-rueda-vida',
@@ -230,18 +288,34 @@ const modules: CurriculumModule[] = [
         videoUrl: '/api/v1/materials/RUEDA_VIDA/video1252771464.mp4',
         audioUrl: '/api/v1/materials/RUEDA_VIDA/audio1252771464.m4a',
         practice: [
-            'Realiza tu rueda de la vida actual.',
-            'Al lado, crea tu rueda objetivo para diciembre de este año.',
-            'Reflexiona y concreta acciones por cada área para llegar a ese resultado.'
+            'Hacer tu rueda de la vida hoy.',
+            'Hacer la rueda de la vida a 31 dic. ¿Qué voy a hacer en cada área para alcanzar lo que quiero?'
         ],
         audios: [],
-        resources: ['Recurso recomendado: 1 película o conferencia inspiradora (placeholder).']
+        resources: [],
+        books: [
+            'Coaching para el éxito - Talane Miedanner',
+            'Los hombres son de marte, las mujeres son de venus - John Gray',
+            'Por qué los hombres no escuchan y las mujeres no entienden los mapas - Pease',
+            'Los 7 hábitos de las familias altamente efectivas - Stephen R. Covey',
+            'El lenguaje del cuerpo - Pease',
+            'La semana laboral de 4 horas - Tim Ferris',
+            'El hombre más rico de Babilonia - George Samuel Clason',
+            'Los secretos de la gente millonaria - T. Harv Eker'
+        ],
+        movies: [
+            'Documental zonas azules',
+            'PS I love you',
+            'Pay it forward (cadena de favores)',
+            'Ok go'
+        ]
     }
 ]
 
 const emptyProgress: CurriculumProgress = {
     completedModuleIds: [],
-    notesByModuleId: {}
+    notesByModuleId: {},
+    feedbackByModuleId: {}
 }
 
 const blockIconMap = {
@@ -258,7 +332,8 @@ const loadProgress = (): CurriculumProgress => {
         const parsed = JSON.parse(raw) as CurriculumProgress
         return {
             completedModuleIds: Array.isArray(parsed.completedModuleIds) ? parsed.completedModuleIds : [],
-            notesByModuleId: parsed.notesByModuleId ?? {}
+            notesByModuleId: parsed.notesByModuleId ?? {},
+            feedbackByModuleId: parsed.feedbackByModuleId ?? {}
         }
     } catch {
         return emptyProgress
@@ -270,6 +345,8 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
     const [modalStep, setModalStep] = useState<number>(1)
     const [progress, setProgress] = useState<CurriculumProgress>(loadProgress)
     const [draftNote, setDraftNote] = useState('')
+    const [feedbackRating, setFeedbackRating] = useState<number>(0)
+    const [feedbackComment, setFeedbackComment] = useState('')
 
     const moduleMap = useMemo(
         () => modules.reduce<Record<string, CurriculumModule>>((acc, item) => {
@@ -293,10 +370,20 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
     useEffect(() => {
         if (!activeModuleId) {
             setDraftNote('')
+            setFeedbackRating(0)
+            setFeedbackComment('')
             return
         }
         setDraftNote(progress.notesByModuleId[activeModuleId] ?? '')
-    }, [activeModuleId, progress.notesByModuleId])
+        const fb = progress.feedbackByModuleId[activeModuleId]
+        if (fb) {
+            setFeedbackRating(fb.rating)
+            setFeedbackComment(fb.comment)
+        } else {
+            setFeedbackRating(0)
+            setFeedbackComment('')
+        }
+    }, [activeModuleId, progress.notesByModuleId, progress.feedbackByModuleId])
 
     const activeModule = activeModuleId ? moduleMap[activeModuleId] : null
     const totalModules = modules.length
@@ -328,6 +415,17 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
             notesByModuleId: {
                 ...prev.notesByModuleId,
                 [activeModuleId]: draftNote.trim()
+            }
+        }))
+    }
+
+    const saveFeedback = () => {
+        if (!activeModuleId || feedbackRating === 0) return
+        setProgress((prev) => ({
+            ...prev,
+            feedbackByModuleId: {
+                ...prev.feedbackByModuleId,
+                [activeModuleId]: { rating: feedbackRating, comment: feedbackComment.trim() }
             }
         }))
     }
@@ -432,6 +530,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                                             <span className="type-badge text"><PenTool size={12} /> Texto</span>
                                             {module.video && <span className="type-badge video"><PlayCircle size={12} /> Video</span>}
                                             {module.audios.length > 0 && <span className="type-badge audio"><Headphones size={12} /> Audio</span>}
+                                            {(module.books.length > 0 || module.movies.length > 0) && <span className="type-badge book"><BookOpen size={12} /> Libros/Películas</span>}
                                             <span className="duration"><Target size={12} /> Práctica guiada</span>
                                         </div>
                                     </div>
@@ -498,7 +597,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                                                 <video 
                                                     controls 
                                                     className="video-player"
-                                                    src={resolveMaterialUrl(activeModule.videoUrl)}
+                                                    src={activeModule.videoUrl}
                                                 >
                                                     Tu navegador no soporta video HTML5.
                                                 </video>
@@ -527,7 +626,7 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                                                 <audio 
                                                     controls 
                                                     className="audio-player"
-                                                    src={resolveMaterialUrl(activeModule.audioUrl)}
+                                                    src={activeModule.audioUrl}
                                                 >
                                                     Tu navegador no soporta audio HTML5.
                                                 </audio>
@@ -536,21 +635,68 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
 
                                         {activeModule.audios.length > 0 && (
                                             <section>
-                                                <h3><Headphones size={16} /> Audios</h3>
-                                                <ul className="audio-list">
+                                                <h3><Headphones size={16} /> Audios de reprogramación</h3>
+                                                <div className="audio-player-list">
                                                     {activeModule.audios.map((item, index) => (
-                                                        <li key={`audio-${index}`}>
-                                                            <PlayCircle size={16} />
-                                                            <span>{item}</span>
-                                                        </li>
+                                                        <div key={`audio-${index}`} className="audio-player-item">
+                                                            <div className="audio-item-label">
+                                                                <PlayCircle size={16} />
+                                                                <span>{item.label}</span>
+                                                            </div>
+                                                            <audio 
+                                                                controls 
+                                                                className="audio-player-sm"
+                                                                src={`${audioBasePath}${item.file}`}
+                                                            >
+                                                                Tu navegador no soporta audio HTML5.
+                                                            </audio>
+                                                        </div>
                                                     ))}
-                                                </ul>
+                                                </div>
+                                            </section>
+                                        )}
+
+                                        {(activeModule.books.length > 0 || activeModule.movies.length > 0) && (
+                                            <section>
+                                                <h3><BookOpen size={16} /> Libros y películas recomendados</h3>
+                                                <div className="resource-grid">
+                                                    {activeModule.books.length > 0 && (
+                                                        <div className="resource-column">
+                                                            <h4 className="resource-column-title">
+                                                                <BookOpen size={14} /> Libros
+                                                            </h4>
+                                                            <ul className="resource-list">
+                                                                {activeModule.books.map((item, index) => (
+                                                                    <li key={`book-${index}`}>
+                                                                        <BookOpen size={14} />
+                                                                        <span>{item}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                    {activeModule.movies.length > 0 && (
+                                                        <div className="resource-column">
+                                                            <h4 className="resource-column-title">
+                                                                <Film size={14} /> Películas / Documentales
+                                                            </h4>
+                                                            <ul className="resource-list">
+                                                                {activeModule.movies.map((item, index) => (
+                                                                    <li key={`movie-${index}`}>
+                                                                        <Film size={14} />
+                                                                        <span>{item}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </section>
                                         )}
 
                                         {activeModule.resources.length > 0 && (
                                             <section>
-                                                <h3><BookOpen size={16} /> Recursos</h3>
+                                                <h3><BookOpen size={16} /> Recursos adicionales</h3>
                                                 <ul className="resource-list">
                                                     {activeModule.resources.map((item, index) => (
                                                         <li key={`resource-${index}`}>
@@ -577,6 +723,41 @@ export const Practices: FC<PracticesProps> = ({ onBack, onStartPractice, initial
                                             />
                                             <button className="btn btn-primary save-btn" onClick={saveNote}>
                                                 Guardar nota
+                                            </button>
+                                        </section>
+
+                                        <section className="feedback-section">
+                                            <h3><MessageSquare size={16} /> Tu opinión sobre esta práctica</h3>
+                                            <p className="text-muted text-sm mb-2">Ayúdanos a mejorar valorando esta práctica.</p>
+                                            
+                                            <div className="star-rating">
+                                                <span className="star-rating-label">Valoración:</span>
+                                                <div className="stars">
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <button
+                                                            key={star}
+                                                            className={`star-btn ${feedbackRating >= star ? 'active' : ''}`}
+                                                            onClick={() => setFeedbackRating(star)}
+                                                            title={`${star} estrella${star !== 1 ? 's' : ''}`}
+                                                        >
+                                                            <Star size={22} fill={feedbackRating >= star ? 'var(--accent)' : 'none'} />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <textarea
+                                                className="journal-input feedback-input"
+                                                placeholder="Cuéntanos qué te ha parecido, qué mejorarías..."
+                                                value={feedbackComment}
+                                                onChange={(event) => setFeedbackComment(event.target.value)}
+                                            />
+                                            <button 
+                                                className="btn btn-accent save-btn" 
+                                                onClick={saveFeedback}
+                                                disabled={feedbackRating === 0}
+                                            >
+                                                <ThumbsUp size={16} /> Enviar opinión
                                             </button>
                                         </section>
                                         
