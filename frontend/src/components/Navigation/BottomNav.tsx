@@ -29,7 +29,7 @@ export const BottomNav: FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
                 >
                     <span className="nav-icon">
                         {item.icon === 'logo'
-                            ? <img src="/logos/Logo_azul.png" alt="SubLab" className="nav-icon-img" />
+                            ? <img src="/logos/Logo_color_oro.png" alt="SubLab" className="nav-icon-img" />
                             : <item.icon size={18} />}
                     </span>
                     <span className="nav-label">{item.label}</span>

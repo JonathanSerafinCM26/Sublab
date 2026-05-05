@@ -21,7 +21,7 @@ export const Sidebar: FC<SidebarProps> = ({ currentPage, onNavigate }) => {
         <aside className="desktop-sidebar glass">
             <div className="sidebar-header">
                 <div className="logo-container">
-                    <img className="logo-icon" src="/logos/Logo_azul.png" alt="SubLab" />
+                    <img className="logo-icon" src="/logos/Logo_color_oro.png" alt="SubLab" />
                     <h1>SubLab</h1>
                 </div>
             </div>
